@@ -711,15 +711,25 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map((order) => {
         if (order.id !== orderId) return order;
         const updatedItems = order.items.map((i) => (i.id === itemId ? { ...i, kitchenStatus: status } : i));
-        // Individual item cross-off on chef checklist does NOT mark the order as ready or close the ticket.
-        // The KOT remains active until the chef explicitly clicks Mark Ready / Bump.
+        // Individual item update in kitchen
         return {
           ...order,
           items: updatedItems,
-          status: order.status === 'OPEN' ? 'PREPARING' : order.status
+          status: order.status === 'OPEN' && status === 'PREPARING' ? 'PREPARING' : order.status
         };
       })
     );
+    if (activeOrder && activeOrder.id === orderId) {
+      setActiveOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.map((i) => (i.id === itemId ? { ...i, kitchenStatus: status } : i)),
+              status: prev.status === 'OPEN' && status === 'PREPARING' ? 'PREPARING' : prev.status
+            }
+          : null
+      );
+    }
   };
 
   const markOrderCooking = (orderId: string) => {
@@ -749,6 +759,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const bumpOrderKitchen = (orderId: string) => {
+    const targetOrder = orders.find((o) => o.id === orderId);
+    if (targetOrder) {
+      const nonDrafts = targetOrder.items.filter((i) => i.kitchenStatus !== 'DRAFT');
+      const allReady = nonDrafts.length > 0 && nonDrafts.every((i) => i.kitchenStatus === 'SERVED');
+      if (!allReady) return;
+    }
+
     setOrders((prev) =>
       prev.map((order) => {
         if (order.id !== orderId) return order;

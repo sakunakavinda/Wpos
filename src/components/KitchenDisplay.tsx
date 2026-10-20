@@ -245,17 +245,23 @@ export const KitchenDisplay: React.FC = () => {
                       .map((item) => {
                         const isItemDone = item.kitchenStatus === 'SERVED';
                         const isCooking = item.kitchenStatus === 'PREPARING';
+                        const isQueued = item.kitchenStatus === 'SENT_TO_KITCHEN';
 
                       return (
                         <div
                           key={item.id}
-                          className={`kds-item-row ${isItemDone ? 'item-done' : ''}`}
+                          className={`kds-item-row ${isItemDone ? 'item-done' : isCooking ? 'item-cooking' : ''}`}
                           onClick={() => {
-                            // Toggle item status between PREPARING and SERVED
-                            const nextStatus = isItemDone ? 'PREPARING' : 'SERVED';
-                            updateOrderItemStatus(order.id, item.id, nextStatus);
+                            // Cycle status on row tap: Queued -> Cooking -> Done -> Queued
+                            if (isQueued) {
+                              updateOrderItemStatus(order.id, item.id, 'PREPARING');
+                            } else if (isCooking) {
+                              updateOrderItemStatus(order.id, item.id, 'SERVED');
+                            } else {
+                              updateOrderItemStatus(order.id, item.id, 'SENT_TO_KITCHEN');
+                            }
                           }}
-                          title="Click to cross off item"
+                          title="Click row to cycle: Queued ⏱️ → Cooking 🔥 → Done ✅"
                         >
                           <div className="item-qty-col">
                             <span className="kds-qty">{item.quantity}x</span>
@@ -271,10 +277,51 @@ export const KitchenDisplay: React.FC = () => {
                             )}
                           </div>
 
-                          <div className="item-check-col">
-                            <span className={`item-status-icon ${isItemDone ? 'done' : isCooking ? 'cooking' : 'sent'}`}>
-                              {isItemDone ? <Check size={14} /> : isCooking ? '🍳' : '⏱️'}
-                            </span>
+                          {/* Individual Item Kitchen Status Controls */}
+                          <div className="kds-item-actions">
+                            {/* Cooking Status Button for this specific item */}
+                            {isCooking ? (
+                              <button
+                                type="button"
+                                className="kds-item-status-btn cooking"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateOrderItemStatus(order.id, item.id, 'SENT_TO_KITCHEN');
+                                }}
+                                title="Cooking in progress! Click to revert to queued"
+                              >
+                                <Flame size={12} />
+                                <span>Cooking</span>
+                              </button>
+                            ) : isQueued ? (
+                              <button
+                                type="button"
+                                className="kds-item-status-btn queued"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateOrderItemStatus(order.id, item.id, 'PREPARING');
+                                }}
+                                title="Click to start cooking this item separately"
+                              >
+                                <Flame size={12} />
+                                <span>Cook</span>
+                              </button>
+                            ) : (
+                              <span className="kds-item-status-pill done">Done</span>
+                            )}
+
+                            {/* Done / Checkmark toggle button */}
+                            <button
+                              type="button"
+                              className={`kds-item-check-btn ${isItemDone ? 'active' : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateOrderItemStatus(order.id, item.id, isItemDone ? 'PREPARING' : 'SERVED');
+                              }}
+                              title={isItemDone ? 'Mark as still preparing' : 'Mark item completed'}
+                            >
+                              <Check size={13} />
+                            </button>
                           </div>
                         </div>
                       );
@@ -283,34 +330,57 @@ export const KitchenDisplay: React.FC = () => {
 
                   {/* Ticket Action Footer */}
                   <div className="ticket-card-footer">
-                    <button
-                      type="button"
-                      className={`btn-kds-action cook-btn ${
-                        order.items.length > 0 && order.items.every((i) => i.kitchenStatus === 'PREPARING') ? 'active' : ''
-                      }`}
-                      onClick={() => markOrderCooking(order.id)}
-                      title="Apply cooking status to all items"
-                    >
-                      <Flame size={15} />
-                      <span>
-                        {order.items.length > 0 && order.items.every((i) => i.kitchenStatus === 'PREPARING')
-                          ? 'Cooking 🔥'
-                          : 'Cooking'}
-                      </span>
-                    </button>
+                    {(() => {
+                      const nonDraftItems = order.items.filter((i) => i.kitchenStatus !== 'DRAFT');
+                      const cookingCount = nonDraftItems.filter((i) => i.kitchenStatus === 'PREPARING').length;
+                      const readyCount = nonDraftItems.filter((i) => i.kitchenStatus === 'SERVED').length;
+                      const allCooking = nonDraftItems.length > 0 && nonDraftItems.every((i) => i.kitchenStatus === 'PREPARING');
+                      const allItemsReady = nonDraftItems.length > 0 && readyCount === nonDraftItems.length;
 
-                    <button
-                      type="button"
-                      className="btn-kds-action bump-btn"
-                      onClick={() => {
-                        bumpOrderKitchen(order.id);
-                        playChime();
-                      }}
-                      title="Mark ready and bump order off kitchen screen"
-                    >
-                      <CheckCircle2 size={16} />
-                      <span>Mark Ready / Bump</span>
-                    </button>
+                      return (
+                        <>
+                          <button
+                            type="button"
+                            className={`btn-kds-action cook-btn ${allCooking ? 'active' : ''}`}
+                            onClick={() => markOrderCooking(order.id)}
+                            title="Apply cooking status to all items in this order"
+                          >
+                            <Flame size={15} />
+                            <span>
+                              {allCooking
+                                ? 'All Cooking 🔥'
+                                : cookingCount > 0
+                                ? `Cooking (${cookingCount}/${nonDraftItems.length}) 🔥`
+                                : 'Cook All'}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`btn-kds-action bump-btn ${allItemsReady ? 'ready-active' : 'disabled'}`}
+                            onClick={() => {
+                              if (!allItemsReady) return;
+                              bumpOrderKitchen(order.id);
+                              playChime();
+                            }}
+                            disabled={!allItemsReady}
+                            id={`kds-bump-btn-${order.id}`}
+                            title={
+                              allItemsReady
+                                ? 'All items ready! Click to bump ticket off screen'
+                                : `Cannot bump: ${readyCount}/${nonDraftItems.length} items ready. All items must be marked done (✓) first.`
+                            }
+                          >
+                            <CheckCircle2 size={16} />
+                            <span>
+                              {allItemsReady
+                                ? 'Mark Ready / Bump'
+                                : `Ready / Bump (${readyCount}/${nonDraftItems.length})`}
+                            </span>
+                          </button>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               );

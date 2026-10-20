@@ -3862,32 +3862,111 @@ input, select, textarea {
   font-weight: 600;
 }
 
-.item-check-col {
-  flex-shrink: 0;
-  padding-top: 2px;
+.kds-item-row.item-cooking {
+  background: rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
-.item-status-icon {
-  width: 24px;
-  height: 24px;
+.kds-item-row.item-cooking .kds-item-name {
+  color: #fed7aa;
+}
+
+.kds-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.kds-item-status-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.kds-item-status-btn.queued {
+  background: rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.kds-item-status-btn.queued:hover {
+  background: rgba(249, 115, 22, 0.22);
+  color: #fb923c;
+  border-color: rgba(249, 115, 22, 0.45);
+  transform: translateY(-1px);
+}
+
+.kds-item-status-btn.cooking {
+  background: rgba(249, 115, 22, 0.28);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.6);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.25);
+  animation: pulseKdsCooking 2s infinite ease-in-out;
+}
+
+.kds-item-status-btn.cooking:hover {
+  background: rgba(249, 115, 22, 0.4);
+  color: #fff;
+  border-color: rgba(249, 115, 22, 0.8);
+}
+
+@keyframes pulseKdsCooking {
+  0%, 100% {
+    border-color: rgba(249, 115, 22, 0.5);
+    box-shadow: 0 0 6px rgba(249, 115, 22, 0.2);
+  }
+  50% {
+    border-color: rgba(249, 115, 22, 0.95);
+    box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
+  }
+}
+
+.kds-item-status-pill.done {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.kds-item-check-btn {
+  width: 26px;
+  height: 26px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.item-status-icon.done {
+.kds-item-check-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: scale(1.08);
+}
+
+.kds-item-check-btn.active {
   background: #10b981;
   color: #fff;
-}
-
-.item-status-icon.cooking {
-  background: rgba(249, 115, 22, 0.2);
-}
-
-.item-status-icon.sent {
-  background: rgba(255, 255, 255, 0.06);
+  border-color: #059669;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
 }
 
 /* Card Action Footer */
@@ -3934,12 +4013,42 @@ input, select, textarea {
 
 .btn-kds-action.bump-btn {
   background: #10b981;
-  color: #064e3b;
+  color: #022c22;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-kds-action.bump-btn:hover {
   background: #34d399;
+}
+
+.btn-kds-action.bump-btn:disabled,
+.btn-kds-action.bump-btn.disabled {
+  opacity: 0.36;
+  cursor: not-allowed !important;
+  background: rgba(255, 255, 255, 0.06);
+  color: #64748b;
+  box-shadow: none;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+}
+
+.btn-kds-action.bump-btn.ready-active {
+  background: #10b981;
+  color: #022c22;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45);
+  font-weight: 800;
+  animation: pulseReadyBump 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseReadyBump {
+  0%, 100% {
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 22px rgba(16, 185, 129, 0.65);
+    transform: scale(1.02);
+  }
 }
 
 .btn-kds-action.bump-btn.bumped {
