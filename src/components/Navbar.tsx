@@ -42,12 +42,16 @@ export const Navbar: React.FC = () => {
 
   const occupiedCount = tables.filter((t) => t.status === 'OCCUPIED' || t.status === 'BILL_PRINTED').length;
   const unpaidCount = orders.filter((o) => o.paymentStatus === 'UNPAID').length;
-  const activeOrdersCount = orders.filter((o) =>
-    o.paymentStatus === 'UNPAID' ||
-    o.status === 'PREPARING' ||
-    o.takeawayStatus === 'PREPARING' ||
-    o.takeawayStatus === 'READY_FOR_PICKUP'
-  ).length;
+  const activeOrdersCount = orders.filter((o) => {
+    if (o.status === 'COMPLETED' || o.status === 'CANCELLED') return false;
+    const hasCommittedItems = o.items.some((i) => i.kitchenStatus !== 'DRAFT');
+    const isSeatedTable = !!o.tableId;
+    if (!hasCommittedItems && !isSeatedTable) return false;
+    if (o.paymentStatus === 'UNPAID') return true;
+    if (!o.kitchenBumped) return true;
+    if (o.type === 'TAKEAWAY' && o.takeawayStatus !== 'COLLECTED') return true;
+    return false;
+  }).length;
   const kitchenCount = orders.filter(
     (o) =>
       !o.kitchenBumped &&

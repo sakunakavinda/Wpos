@@ -39,8 +39,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
     setOrderType,
     setOrderCustomer,
     clearActiveCart,
-    parkActiveOrder,
-    sendDraftsToKitchen
+    parkActiveOrder
   } = usePOS();
 
   const [editingNoteItemId, setEditingNoteItemId] = useState<string | null>(null);
@@ -76,10 +75,6 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
 
   const handlePayNow = () => {
     if (!activeOrder) return;
-    const newlySent = sendDraftsToKitchen();
-    if (newlySent.length > 0) {
-      onKOTModal(newlySent);
-    }
     onPaymentModal(activeOrder.id);
   };
 

@@ -115,10 +115,11 @@ const POSMain: React.FC = () => {
           orderId={paymentOrderId}
           onClose={() => {
             setPaymentOrderId(null);
-            setActiveOrder(null);
           }}
           onPaymentSuccess={() => {
-            showToast('✅ Payment settled! KOT active in Kitchen.');
+            setPaymentOrderId(null);
+            setActiveOrder(null);
+            showToast('✅ Order placed & KOT dispatched to Kitchen!');
           }}
         />
       )}

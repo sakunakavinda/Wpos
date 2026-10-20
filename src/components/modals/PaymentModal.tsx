@@ -21,8 +21,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   onPaymentSuccess
 }) => {
-  const { orders, settleOrder, setOrderTip } = usePOS();
-  const order = orders.find((o) => o.id === orderId);
+  const { orders, activeOrder, settleOrder, setOrderTip } = usePOS();
+  const order = orders.find((o) => o.id === orderId) || (activeOrder?.id === orderId ? activeOrder : null);
 
   if (!order) return null;
 

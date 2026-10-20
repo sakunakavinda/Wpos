@@ -30,8 +30,7 @@ export const ActiveOrdersView: React.FC<ActiveOrdersViewProps> = ({
     orders,
     setActiveOrder,
     setCurrentMode,
-    markTakeawayCollected,
-    markTakeawayReady
+    markTakeawayCollected
   } = usePOS();
 
   const [filter, setFilter] = useState<'ALL_ACTIVE' | 'DINE_IN' | 'TAKEAWAY' | 'COMPLETED'>('ALL_ACTIVE');
@@ -45,6 +44,12 @@ export const ActiveOrdersView: React.FC<ActiveOrdersViewProps> = ({
   // Determine if an order is active (either unpaid OR still being prepared / waiting for collection)
   const isOrderActive = (order: Order) => {
     if (order.status === 'COMPLETED' || order.status === 'CANCELLED') return false;
+
+    // A cart with only DRAFT items and no assigned table is not an active tab!
+    const hasCommittedItems = order.items.some((i) => i.kitchenStatus !== 'DRAFT');
+    const isSeatedTable = !!order.tableId;
+    if (!hasCommittedItems && !isSeatedTable) return false;
+
     if (order.paymentStatus === 'UNPAID') return true;
     
     // If paid, it remains active if kitchen hasn't bumped it yet, or takeaway hasn't been collected
@@ -306,18 +311,6 @@ export const ActiveOrdersView: React.FC<ActiveOrdersViewProps> = ({
                       >
                         <PackageCheck size={14} />
                         <span>Collected</span>
-                      </button>
-                    )}
-
-                    {/* Quick Ready bump if cooking and not ready */}
-                    {isTakeaway && !isReady && (
-                      <button
-                        className="order-btn ready-quick-btn"
-                        onClick={() => markTakeawayReady(order.id)}
-                        title="Mark Prepared and Ready for Pickup"
-                      >
-                        <CheckCircle size={14} />
-                        <span>Ready</span>
                       </button>
                     )}
 

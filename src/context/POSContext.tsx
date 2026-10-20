@@ -263,7 +263,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    setOrders((prev) => [newOrder, ...prev]);
+    // Do NOT add to orders list yet! Draft carts only become active tabs when parked or settled.
     setActiveOrder(newOrder);
     setCurrentMode('REGISTER');
     return newOrder;
@@ -460,7 +460,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       kitchenBumped: false
     };
 
-    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    setOrders((prev) => {
+      const exists = prev.some((o) => o.id === updatedOrder.id);
+      return exists ? prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)) : [updatedOrder, ...prev];
+    });
     setActiveOrder(updatedOrder);
 
     // Return the items that were just sent for KOT display
@@ -488,7 +491,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     tendered?: number,
     changeDue?: number
   ): { order: Order; payment: PaymentRecord } => {
-    const targetOrder = orders.find((o) => o.id === orderId);
+    const targetOrder = orders.find((o) => o.id === orderId) || (activeOrder?.id === orderId ? activeOrder : null);
     if (!targetOrder) throw new Error('Order not found');
 
     const payment: PaymentRecord = {
@@ -525,11 +528,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: newStatus,
       takeawayStatus: targetOrder.type === 'TAKEAWAY' ? (allServed ? 'READY_FOR_PICKUP' : 'PREPARING') : undefined,
       payOnPickup: false,
+      kitchenBumped: false,
       closedAt: allServed ? now : undefined
     };
 
     // Update orders list
-    setOrders((prev) => prev.map((o) => (o.id === orderId ? updatedOrder : o)));
+    setOrders((prev) => {
+      const exists = prev.some((o) => o.id === orderId);
+      return exists ? prev.map((o) => (o.id === orderId ? updatedOrder : o)) : [updatedOrder, ...prev];
+    });
 
     // Record payment
     setPaymentHistory((prev) => [payment, ...prev]);
