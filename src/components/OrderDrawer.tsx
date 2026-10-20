@@ -12,7 +12,9 @@ import {
   ShoppingBag,
   RotateCcw,
   UtensilsCrossed,
-  Tag
+  Tag,
+  Lock,
+  CheckCircle2
 } from 'lucide-react';
 import type { OrderItem, OrderType } from '../types/pos';
 
@@ -49,6 +51,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
 
   // Calculate pricing if order exists
   const items = activeOrder?.items || [];
+  const isPaid = activeOrder?.paymentStatus === 'PAID';
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountPercent = activeOrder?.discountPercent || 0;
   const discountAmount = subtotal * (discountPercent / 100);
@@ -111,77 +114,94 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
               {activeOrder ? activeOrder.orderNumber : 'New Order'}
             </span>
 
-            {/* Simple Order Type Switch */}
-            <div className="order-type-switch">
-              <button
-                type="button"
-                className={`type-switch-btn ${(!activeOrder || activeOrder.type === 'TAKEAWAY') ? 'active' : ''}`}
-                onClick={() => handleTypeChange('TAKEAWAY')}
-              >
-                <ShoppingBag size={13} />
-                <span>Takeaway</span>
-              </button>
-              <button
-                type="button"
-                className={`type-switch-btn ${activeOrder?.type === 'DINE_IN' ? 'active' : ''}`}
-                onClick={() => handleTypeChange('DINE_IN')}
-              >
-                <UtensilsCrossed size={13} />
-                <span>Dine-In</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Table / Customer inline row */}
-          <div className="order-subtitle-row">
-            {activeOrder?.type === 'DINE_IN' ? (
-              <div className="table-inline-picker">
-                <span className="picker-label">Table:</span>
-                <select
-                  value={activeOrder.tableId || ''}
-                  onChange={(e) => {
-                    const tbl = tables.find((t) => t.id === e.target.value);
-                    if (tbl) {
-                      setOrderType('DINE_IN', tbl.id, `${tbl.name} (${tbl.number})`);
-                    }
-                  }}
-                  className="table-select-dropdown"
-                >
-                  {tables.map((tbl) => (
-                    <option key={tbl.id} value={tbl.id}>
-                      {tbl.number} - {tbl.name} ({tbl.capacity}p) {tbl.status !== 'AVAILABLE' && tbl.id !== activeOrder.tableId ? '• Busy' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {isPaid ? (
+              <span className="drawer-locked-pill">
+                <Lock size={12} /> Closed Bill (Paid)
+              </span>
             ) : (
-              <div className="takeaway-inline-info">
-                {activeOrder?.customerName && (
-                  <span className="client-name">{activeOrder.customerName}</span>
-                )}
-                {activeOrder?.pickupToken && (
-                  <span className="token-chip">{activeOrder.pickupToken}</span>
-                )}
-                {!isEditingCustomer && (
-                  <button
-                    type="button"
-                    className="btn-add-customer-tag"
-                    onClick={() => {
-                      setCustomerNameInput(activeOrder?.customerName || '');
-                      setTokenInput(activeOrder?.pickupToken || '');
-                      setIsEditingCustomer(true);
-                    }}
-                  >
-                    <Tag size={11} />
-                    <span>{activeOrder?.customerName ? 'Edit Tag' : '+ Name / Buzzer #'}</span>
-                  </button>
-                )}
+              /* Simple Order Type Switch */
+              <div className="order-type-switch">
+                <button
+                  type="button"
+                  className={`type-switch-btn ${(!activeOrder || activeOrder.type === 'TAKEAWAY') ? 'active' : ''}`}
+                  onClick={() => handleTypeChange('TAKEAWAY')}
+                >
+                  <ShoppingBag size={13} />
+                  <span>Takeaway</span>
+                </button>
+                <button
+                  type="button"
+                  className={`type-switch-btn ${activeOrder?.type === 'DINE_IN' ? 'active' : ''}`}
+                  onClick={() => handleTypeChange('DINE_IN')}
+                >
+                  <UtensilsCrossed size={13} />
+                  <span>Dine-In</span>
+                </button>
               </div>
             )}
           </div>
 
+          {/* Table / Customer inline row */}
+          {isPaid ? (
+            <div className="order-subtitle-row">
+              <span className="locked-destination-info">
+                {activeOrder?.type === 'DINE_IN'
+                  ? (activeOrder.tableName || 'Dine-In Table')
+                  : (activeOrder?.pickupToken || activeOrder?.customerName || 'Takeaway')}
+              </span>
+              <span className="locked-server-info">Server: {activeOrder?.serverName}</span>
+            </div>
+          ) : (
+            <div className="order-subtitle-row">
+              {activeOrder?.type === 'DINE_IN' ? (
+                <div className="table-inline-picker">
+                  <span className="picker-label">Table:</span>
+                  <select
+                    value={activeOrder.tableId || ''}
+                    onChange={(e) => {
+                      const tbl = tables.find((t) => t.id === e.target.value);
+                      if (tbl) {
+                        setOrderType('DINE_IN', tbl.id, `${tbl.name} (${tbl.number})`);
+                      }
+                    }}
+                    className="table-select-dropdown"
+                  >
+                    {tables.map((tbl) => (
+                      <option key={tbl.id} value={tbl.id}>
+                        {tbl.number} - {tbl.name} ({tbl.capacity}p) {tbl.status !== 'AVAILABLE' && tbl.id !== activeOrder.tableId ? '• Busy' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="takeaway-inline-info">
+                  {activeOrder?.customerName && (
+                    <span className="client-name">{activeOrder.customerName}</span>
+                  )}
+                  {activeOrder?.pickupToken && (
+                    <span className="token-chip">{activeOrder.pickupToken}</span>
+                  )}
+                  {!isEditingCustomer && (
+                    <button
+                      type="button"
+                      className="btn-add-customer-tag"
+                      onClick={() => {
+                        setCustomerNameInput(activeOrder?.customerName || '');
+                        setTokenInput(activeOrder?.pickupToken || '');
+                        setIsEditingCustomer(true);
+                      }}
+                    >
+                      <Tag size={11} />
+                      <span>{activeOrder?.customerName ? 'Edit Tag' : '+ Name / Buzzer #'}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Optional inline tag edit popup */}
-          {isEditingCustomer && (
+          {isEditingCustomer && !isPaid && (
             <div className="inline-customer-edit">
               <input
                 type="text"
@@ -266,8 +286,8 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
         )}
       </div>
 
-      {/* Simple Quick Adjustments (Only visible when items exist) */}
-      {items.length > 0 && (
+      {/* Simple Quick Adjustments (Only visible when items exist and order is NOT paid) */}
+      {items.length > 0 && !isPaid && (
         <div className="drawer-adjustments">
           <div className="adjustment-row">
             <span className="adj-label">
@@ -310,46 +330,69 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
         </div>
       </div>
 
-      {/* Bottom Actions Bar: Primary actions */}
+      {/* Bottom Actions Bar */}
       <div className="drawer-footer-actions">
-        {activeOrder?.type === 'DINE_IN' && items.length > 0 && (
-          <button
-            type="button"
-            className="footer-btn guest-check-btn-compact"
-            onClick={() => onPrintGuestCheck(activeOrder.id)}
-            title="Print Guest Check"
-          >
-            <Receipt size={16} />
-            <span>Check</span>
-          </button>
+        {isPaid ? (
+          <div className="drawer-paid-locked-bar">
+            <div className="paid-locked-info">
+              <CheckCircle2 size={18} className="text-green" />
+              <div className="locked-text-wrap">
+                <span className="locked-main">Bill Closed & Paid</span>
+                <span className="locked-sub">Total: ${grandTotal.toFixed(2)} • Read Only</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="btn-new-order-fresh"
+              onClick={clearActiveCart}
+              id="btn-drawer-new-order"
+            >
+              <Plus size={15} />
+              <span>New Order</span>
+            </button>
+          </div>
+        ) : (
+          <>
+            {activeOrder?.type === 'DINE_IN' && items.length > 0 && (
+              <button
+                type="button"
+                className="footer-btn guest-check-btn-compact"
+                onClick={() => onPrintGuestCheck(activeOrder.id)}
+                title="Print Guest Check"
+              >
+                <Receipt size={16} />
+                <span>Check</span>
+              </button>
+            )}
+
+            {/* 1. Pay Later / Hold button: sends to kitchen and clears screen for next customer */}
+            <button
+              className="footer-btn hold-pickup-btn"
+              onClick={handleHoldAndPayLater}
+              disabled={items.length === 0}
+              title={
+                activeOrder?.type === 'DINE_IN'
+                  ? 'Send items to kitchen & keep table open for post-dine payment'
+                  : 'Send items to kitchen & park in pickup queue for payment upon collection'
+              }
+              id="btn-hold-pay-later"
+            >
+              <Flame size={17} />
+              <span>Send / Pay Later</span>
+            </button>
+
+            {/* 2. Pay Now button: instant checkout */}
+            <button
+              className="footer-btn pay-btn"
+              onClick={handlePayNow}
+              disabled={items.length === 0}
+              id="btn-pay-now"
+            >
+              <CreditCard size={17} />
+              <span>Pay Now (${grandTotal.toFixed(2)})</span>
+            </button>
+          </>
         )}
-
-        {/* 1. Pay Later / Hold button: sends to kitchen and clears screen for next customer */}
-        <button
-          className="footer-btn hold-pickup-btn"
-          onClick={handleHoldAndPayLater}
-          disabled={items.length === 0}
-          title={
-            activeOrder?.type === 'DINE_IN'
-              ? 'Send items to kitchen & keep table open for post-dine payment'
-              : 'Send items to kitchen & park in pickup queue for payment upon collection'
-          }
-          id="btn-hold-pay-later"
-        >
-          <Flame size={17} />
-          <span>Send / Pay Later</span>
-        </button>
-
-        {/* 2. Pay Now button: instant checkout */}
-        <button
-          className="footer-btn pay-btn"
-          onClick={handlePayNow}
-          disabled={items.length === 0}
-          id="btn-pay-now"
-        >
-          <CreditCard size={17} />
-          <span>Pay Now (${grandTotal.toFixed(2)})</span>
-        </button>
       </div>
     </aside>
   );
@@ -367,26 +410,32 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
           </div>
 
           <div className="item-qty-controls">
-            <button
-              className="qty-btn minus"
-              onClick={() => updateItemQuantity(item.id, -1)}
-            >
-              <Minus size={13} />
-            </button>
-            <span className="qty-val">{item.quantity}</span>
-            <button
-              className="qty-btn plus"
-              onClick={() => updateItemQuantity(item.id, 1)}
-            >
-              <Plus size={13} />
-            </button>
+            {!isPaid ? (
+              <>
+                <button
+                  className="qty-btn minus"
+                  onClick={() => updateItemQuantity(item.id, -1)}
+                >
+                  <Minus size={13} />
+                </button>
+                <span className="qty-val">{item.quantity}</span>
+                <button
+                  className="qty-btn plus"
+                  onClick={() => updateItemQuantity(item.id, 1)}
+                >
+                  <Plus size={13} />
+                </button>
+              </>
+            ) : (
+              <span className="qty-val locked-qty">{item.quantity}x</span>
+            )}
           </div>
 
           <div className="item-total-col">
             <span className="item-line-total">
               ${(item.price * item.quantity).toFixed(2)}
             </span>
-            {isDraft && (
+            {isDraft && !isPaid && (
               <button
                 className="item-delete-btn"
                 onClick={() => removeItemFromOrder(item.id)}
@@ -404,19 +453,21 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
             <div className="item-note-badge">
               <MessageSquare size={11} />
               <span>{item.notes}</span>
-              <button
-                className="edit-note-btn"
-                onClick={() => {
-                  setEditingNoteItemId(item.id);
-                  setNoteText(item.notes || '');
-                }}
-              >
-                Edit
-              </button>
+              {!isPaid && (
+                <button
+                  className="edit-note-btn"
+                  onClick={() => {
+                    setEditingNoteItemId(item.id);
+                    setNoteText(item.notes || '');
+                  }}
+                >
+                  Edit
+                </button>
+              )}
             </div>
           )}
 
-          {!item.notes && !isEditingNote && isDraft && (
+          {!item.notes && !isEditingNote && isDraft && !isPaid && (
             <button
               className="add-note-prompt"
               onClick={() => {

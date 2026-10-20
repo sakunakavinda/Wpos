@@ -9,7 +9,8 @@ import {
   DollarSign,
   PlusCircle,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Lock
 } from 'lucide-react';
 
 interface TableViewProps {
@@ -219,39 +220,52 @@ export const TableView: React.FC<TableViewProps> = ({
               {/* Card Actions Footer */}
               {(table.status === 'OCCUPIED' || table.status === 'BILL_PRINTED') && activeOrder && (
                 <div className="table-card-actions">
-                  <button
-                    className="action-btn open-tab"
-                    title="Open Table Cart & Add Items"
-                    onClick={() => selectOrderForTable(table.id)}
-                  >
-                    <span>Add Items / Cart</span>
-                  </button>
+                  {activeOrder.paymentStatus !== 'PAID' ? (
+                    <>
+                      <button
+                        className="action-btn open-tab"
+                        title="Open Table Cart & Add Items"
+                        onClick={() => selectOrderForTable(table.id)}
+                      >
+                        <span>Add Items / Cart</span>
+                      </button>
 
-                  <button
-                    className="action-btn print-bill"
-                    title="Print Guest Check"
-                    onClick={() => onPrintGuestCheck(activeOrder.id)}
-                  >
-                    <Receipt size={14} />
-                    <span>Check</span>
-                  </button>
+                      <button
+                        className="action-btn print-bill"
+                        title="Print Guest Check"
+                        onClick={() => onPrintGuestCheck(activeOrder.id)}
+                      >
+                        <Receipt size={14} />
+                        <span>Check</span>
+                      </button>
 
-                  <button
-                    className="action-btn transfer"
-                    title="Move Order to Another Table"
-                    onClick={() => onTransferModal(table)}
-                  >
-                    <ArrowRightLeft size={14} />
-                  </button>
+                      <button
+                        className="action-btn transfer"
+                        title="Move Order to Another Table"
+                        onClick={() => onTransferModal(table)}
+                      >
+                        <ArrowRightLeft size={14} />
+                      </button>
 
-                  <button
-                    className="action-btn pay-now"
-                    title="Settle Payment"
-                    onClick={() => onPaymentModal(activeOrder.id)}
-                  >
-                    <DollarSign size={14} />
-                    <span>Pay</span>
-                  </button>
+                      <button
+                        className="action-btn pay-now"
+                        title="Settle Payment"
+                        onClick={() => onPaymentModal(activeOrder.id)}
+                      >
+                        <DollarSign size={14} />
+                        <span>Pay</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="action-btn view-tab"
+                      title="View Settled Bill (Locked & Read Only)"
+                      onClick={() => selectOrderForTable(table.id)}
+                    >
+                      <Lock size={13} />
+                      <span>View Paid Bill</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>

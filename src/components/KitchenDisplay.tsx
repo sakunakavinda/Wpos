@@ -57,13 +57,11 @@ export const KitchenDisplay: React.FC = () => {
     return hasKitchenItems;
   });
 
-  // Active cooking orders (not fully bumped/served)
+  // Active cooking orders: tickets that are live in the kitchen and NOT yet bumped/cleared
   const activeKitchenOrders = kitchenOrders.filter((o) => {
-    // If not completed or if items still in cooking/sent
-    const hasPendingItems = o.items.some(
-      (i) => i.kitchenStatus === 'SENT_TO_KITCHEN' || i.kitchenStatus === 'PREPARING'
-    );
-    return hasPendingItems;
+    if (o.kitchenBumped) return false;
+    if (o.status === 'COMPLETED' || o.status === 'CANCELLED') return false;
+    return true;
   });
 
   // Play sound when new active orders count increases
@@ -85,8 +83,7 @@ export const KitchenDisplay: React.FC = () => {
     if (filter === 'DINE_IN') return o.type === 'DINE_IN';
     if (filter === 'TAKEAWAY') return o.type === 'TAKEAWAY';
     if (filter === 'COMPLETED') {
-      const allItemsServed = o.items.every((i) => i.kitchenStatus === 'SERVED');
-      return allItemsServed;
+      return o.kitchenBumped || o.status === 'COMPLETED' || o.status === 'SERVED';
     }
     return true;
   });

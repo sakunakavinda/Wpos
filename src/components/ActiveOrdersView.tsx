@@ -12,7 +12,8 @@ import {
   ChefHat,
   ShoppingBag,
   UtensilsCrossed,
-  PackageCheck
+  PackageCheck,
+  Lock
 } from 'lucide-react';
 import type { Order } from '../types/pos';
 
@@ -43,14 +44,11 @@ export const ActiveOrdersView: React.FC<ActiveOrdersViewProps> = ({
 
   // Determine if an order is active (either unpaid OR still being prepared / waiting for collection)
   const isOrderActive = (order: Order) => {
+    if (order.status === 'COMPLETED' || order.status === 'CANCELLED') return false;
     if (order.paymentStatus === 'UNPAID') return true;
     
-    // If paid, check if kitchen is still working on it or waiting for customer pickup
-    const hasUnservedItems = order.items.some(
-      (i) => i.kitchenStatus === 'SENT_TO_KITCHEN' || i.kitchenStatus === 'PREPARING'
-    );
-    if (hasUnservedItems) return true;
-    if (order.status === 'PREPARING' || order.status === 'OPEN') return true;
+    // If paid, it remains active if kitchen hasn't bumped it yet, or takeaway hasn't been collected
+    if (!order.kitchenBumped) return true;
     if (order.type === 'TAKEAWAY' && order.takeawayStatus !== 'COLLECTED') return true;
     
     return false;
@@ -160,12 +158,11 @@ export const ActiveOrdersView: React.FC<ActiveOrdersViewProps> = ({
             // Preparing state analysis
             const hasCookingItems = order.items.some((i) => i.kitchenStatus === 'PREPARING');
             const hasSentItems = order.items.some((i) => i.kitchenStatus === 'SENT_TO_KITCHEN');
-            const allItemsServed = order.items.length > 0 && order.items.every((i) => i.kitchenStatus === 'SERVED');
             const hasDraftItems = order.items.some((i) => i.kitchenStatus === 'DRAFT');
 
             const isPaid = order.paymentStatus === 'PAID';
             const isTakeaway = order.type === 'TAKEAWAY';
-            const isReady = order.takeawayStatus === 'READY_FOR_PICKUP' || allItemsServed;
+            const isReady = !!order.kitchenBumped || order.takeawayStatus === 'READY_FOR_PICKUP' || order.status === 'SERVED';
 
             return (
               <div
@@ -273,18 +270,32 @@ export const ActiveOrdersView: React.FC<ActiveOrdersViewProps> = ({
                   </div>
 
                   <div className="card-btn-group">
-                    {/* Open in Cart Drawer */}
-                    <button
-                      className="order-btn edit-btn"
-                      onClick={() => {
-                        setActiveOrder(order);
-                        setCurrentMode('REGISTER');
-                      }}
-                      title="Open Order in Register Drawer"
-                    >
-                      <span>Open Cart</span>
-                      <ArrowRight size={13} />
-                    </button>
+                    {/* If Unpaid, allow Open / Edit. If Paid, show View Bill (Read Only) */}
+                    {!isPaid ? (
+                      <button
+                        className="order-btn edit-btn"
+                        onClick={() => {
+                          setActiveOrder(order);
+                          setCurrentMode('REGISTER');
+                        }}
+                        title="Open Order in Register Drawer to Edit"
+                      >
+                        <span>Open / Edit</span>
+                        <ArrowRight size={13} />
+                      </button>
+                    ) : (
+                      <button
+                        className="order-btn view-only-btn"
+                        onClick={() => {
+                          setActiveOrder(order);
+                          setCurrentMode('REGISTER');
+                        }}
+                        title="View Settled Bill (Locked & Read Only)"
+                      >
+                        <Lock size={12} />
+                        <span>View Bill</span>
+                      </button>
+                    )}
 
                     {/* If Takeaway & Ready but not collected */}
                     {isTakeaway && isReady && order.takeawayStatus !== 'COLLECTED' && isPaid && (

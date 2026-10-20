@@ -78,6 +78,8 @@ export interface Order {
   taxRate: number; // e.g., 0.08 for 8%
   createdAt: string;
   closedAt?: string;
+  kitchenBumped?: boolean;
+  kitchenBumpedAt?: string;
   notes?: string;
 }
 

@@ -48,8 +48,14 @@ export const Navbar: React.FC = () => {
     o.takeawayStatus === 'PREPARING' ||
     o.takeawayStatus === 'READY_FOR_PICKUP'
   ).length;
-  const kitchenCount = orders.filter((o) =>
-    o.items.some((i) => i.kitchenStatus === 'SENT_TO_KITCHEN' || i.kitchenStatus === 'PREPARING')
+  const kitchenCount = orders.filter(
+    (o) =>
+      !o.kitchenBumped &&
+      o.status !== 'COMPLETED' &&
+      o.status !== 'CANCELLED' &&
+      o.items.some(
+        (i) => i.kitchenStatus === 'SENT_TO_KITCHEN' || i.kitchenStatus === 'PREPARING' || i.kitchenStatus === 'SERVED'
+      )
   ).length;
 
   return (

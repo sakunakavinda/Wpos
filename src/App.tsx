@@ -6,15 +6,12 @@ import { RegisterView } from './components/RegisterView';
 import { ActiveOrdersView } from './components/ActiveOrdersView';
 import { ShiftView } from './components/ShiftView';
 import { OrderDrawer } from './components/OrderDrawer';
-import { TakeawayQueueBar } from './components/TakeawayQueueBar';
-
 import { KitchenDisplay } from './components/KitchenDisplay';
 
 // Modals
 import { OpenTableModal } from './components/modals/OpenTableModal';
 import { PaymentModal } from './components/modals/PaymentModal';
 import { TransferTableModal } from './components/modals/TransferTableModal';
-import { NewTakeawayModal } from './components/modals/NewTakeawayModal';
 
 import type { RestaurantTable } from './types/pos';
 import './index.css';
@@ -26,7 +23,6 @@ const POSMain: React.FC = () => {
   const [openTableTarget, setOpenTableTarget] = useState<RestaurantTable | null>(null);
   const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
   const [transferTableSource, setTransferTableSource] = useState<RestaurantTable | null>(null);
-  const [isTakeawayModalOpen, setIsTakeawayModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Check if opened as dedicated standalone Kitchen Screen window (e.g. /?view=kitchen)
@@ -81,16 +77,10 @@ const POSMain: React.FC = () => {
             )}
 
             {currentMode === 'ORDERS' && (
-              <>
-                <TakeawayQueueBar
-                  onNewTakeaway={() => setIsTakeawayModalOpen(true)}
-                  onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
-                />
-                <ActiveOrdersView
-                  onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
-                  onPrintGuestCheck={handlePrintGuestCheck}
-                />
-              </>
+              <ActiveOrdersView
+                onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
+                onPrintGuestCheck={handlePrintGuestCheck}
+              />
             )}
 
             {currentMode === 'ANALYTICS' && <ShiftView />}
@@ -113,9 +103,6 @@ const POSMain: React.FC = () => {
       )}
 
       {/* MODALS */}
-      {isTakeawayModalOpen && (
-        <NewTakeawayModal onClose={() => setIsTakeawayModalOpen(false)} />
-      )}
       {openTableTarget && (
         <OpenTableModal
           table={openTableTarget}

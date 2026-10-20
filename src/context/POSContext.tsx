@@ -346,8 +346,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addItemToActiveOrder = (product: Product, notes?: string) => {
     let targetOrder = activeOrder;
 
-    // If no active order, automatically start a quick takeaway sale
-    if (!targetOrder) {
+    // If no active order or if active order is already PAID (closed bill), start a fresh order
+    if (!targetOrder || targetOrder.paymentStatus === 'PAID') {
       targetOrder = startQuickSale();
     }
 
@@ -394,7 +394,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateItemQuantity = (itemId: string, delta: number) => {
-    if (!activeOrder) return;
+    if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
 
     const item = activeOrder.items.find((i) => i.id === itemId);
     if (!item) return;
@@ -419,7 +419,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const removeItemFromOrder = (itemId: string) => {
-    if (!activeOrder) return;
+    if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
     const updatedItems = activeOrder.items.filter((i) => i.id !== itemId);
     const updatedOrder = { ...activeOrder, items: updatedItems };
     setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
@@ -427,7 +427,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateItemNotes = (itemId: string, notes: string) => {
-    if (!activeOrder) return;
+    if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
     const updatedItems = activeOrder.items.map((i) => (i.id === itemId ? { ...i, notes } : i));
     const updatedOrder = { ...activeOrder, items: updatedItems };
     setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
@@ -456,7 +456,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       items: updatedItems,
       status: 'PREPARING',
       takeawayStatus: activeOrder.type === 'TAKEAWAY' ? 'PREPARING' : activeOrder.takeawayStatus,
-      payOnPickup: activeOrder.type === 'TAKEAWAY' ? true : activeOrder.payOnPickup
+      payOnPickup: activeOrder.type === 'TAKEAWAY' ? true : activeOrder.payOnPickup,
+      kitchenBumped: false
     };
 
     setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
@@ -617,21 +618,21 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setOrderDiscount = (discountPercent: number) => {
-    if (!activeOrder) return;
+    if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
     const updatedOrder = { ...activeOrder, discountPercent };
     setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
     setActiveOrder(updatedOrder);
   };
 
   const setOrderTip = (tipAmount: number) => {
-    if (!activeOrder) return;
+    if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
     const updatedOrder = { ...activeOrder, tipAmount };
     setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
     setActiveOrder(updatedOrder);
   };
 
   const setOrderType = (type: OrderType, tableId?: string, tableName?: string) => {
-    if (!activeOrder) return;
+    if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
     const updatedOrder: Order = {
       ...activeOrder,
       type,
@@ -655,7 +656,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setOrderCustomer = (customerName?: string, token?: string) => {
-    if (!activeOrder) return;
+    if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
     const updatedOrder: Order = {
       ...activeOrder,
       customerName: customerName || activeOrder.customerName,
@@ -694,12 +695,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map((order) => {
         if (order.id !== orderId) return order;
         const updatedItems = order.items.map((i) => (i.id === itemId ? { ...i, kitchenStatus: status } : i));
-        const allServed = updatedItems.every((i) => i.kitchenStatus === 'SERVED');
+        // Individual item cross-off on chef checklist does NOT mark the order as ready or close the ticket.
+        // The KOT remains active until the chef explicitly clicks Mark Ready / Bump.
         return {
           ...order,
           items: updatedItems,
-          status: allServed ? 'SERVED' : order.status,
-          takeawayStatus: order.type === 'TAKEAWAY' && allServed ? 'READY_FOR_PICKUP' : order.takeawayStatus
+          status: order.status === 'OPEN' ? 'PREPARING' : order.status
         };
       })
     );
@@ -735,6 +736,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           status: newStatus,
           takeawayStatus: isTakeaway ? 'READY_FOR_PICKUP' : order.takeawayStatus,
           closedAt: (isDineIn && isPaid) ? new Date().toISOString() : order.closedAt,
+          kitchenBumped: true,
+          kitchenBumpedAt: new Date().toISOString(),
           items: order.items.map((i) => ({ ...i, kitchenStatus: 'SERVED' as const }))
         };
       })
