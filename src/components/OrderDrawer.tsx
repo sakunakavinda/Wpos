@@ -31,6 +31,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
 }) => {
   const {
     activeOrder,
+    orders,
     tables,
     updateItemQuantity,
     removeItemFromOrder,
@@ -69,8 +70,12 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
 
   const hasCommittedItems = items.some((i) => i.kitchenStatus !== 'DRAFT');
   const hasDraftItems = draftItems.length > 0;
+  // An existing order in system (placed, parked, or already has committed kitchen items)
+  const isExistingOrder = Boolean(
+    activeOrder && (orders.some((o) => o.id === activeOrder.id) || hasCommittedItems)
+  );
   // An existing unpaid order that has newly added draft items waiting to be sent/updated
-  const isExistingUnpaidOrderWithDrafts = !isPaid && hasCommittedItems && hasDraftItems;
+  const isExistingUnpaidOrderWithDrafts = isExistingOrder && !isPaid && hasDraftItems;
 
   const handleHoldAndPayLater = () => {
     const newlySent = parkActiveOrder();
@@ -385,11 +390,11 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
                 <RotateCcw size={17} />
                 <span>Update</span>
               </button>
-            ) : (
+            ) : !isExistingOrder ? (
               <button
                 className="footer-btn hold-pickup-btn"
                 onClick={handleHoldAndPayLater}
-                disabled={items.length === 0 || (hasCommittedItems && draftItems.length === 0)}
+                disabled={items.length === 0}
                 title={
                   activeOrder?.type === 'DINE_IN'
                     ? 'Send items to kitchen & keep table open for post-dine payment'
@@ -400,7 +405,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
                 <Flame size={17} />
                 <span>Send / Pay Later</span>
               </button>
-            )}
+            ) : null}
 
             {/* 2. Pay Now button: instant checkout (faded and unclickable until new items are updated) */}
             <button
