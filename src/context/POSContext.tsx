@@ -214,23 +214,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    setOrders((prev) => [newOrder, ...prev]);
-
-    setTables((prev) =>
-      prev.map((tbl) =>
-        tbl.id === tableId
-          ? {
-              ...tbl,
-              status: 'OCCUPIED',
-              activeOrderId: newOrderId,
-              seatedAt: new Date().toISOString(),
-              guestCount,
-              serverName
-            }
-          : tbl
-      )
-    );
-
+    // Do NOT add to orders list or mark table OCCUPIED yet!
+    // Draft carts only become active tabs and reserve the table once the order is placed!
     setActiveOrder(newOrder);
     return newOrder;
   };
@@ -473,6 +458,25 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const exists = prev.some((o) => o.id === updatedOrder.id);
       return exists ? prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)) : [updatedOrder, ...prev];
     });
+
+    // When the order is placed, if it is DINE_IN, mark the table as OCCUPIED!
+    if (updatedOrder.type === 'DINE_IN' && updatedOrder.tableId) {
+      setTables((prev) =>
+        prev.map((t) =>
+          t.id === updatedOrder.tableId
+            ? {
+                ...t,
+                status: 'OCCUPIED',
+                activeOrderId: updatedOrder.id,
+                seatedAt: t.seatedAt || now,
+                guestCount: updatedOrder.guestCount || t.guestCount || 2,
+                serverName: updatedOrder.serverName || t.serverName || 'Staff'
+              }
+            : t
+        )
+      );
+    }
+
     setActiveOrder(updatedOrder);
 
     // Return the items that were just sent for KOT display
@@ -550,7 +554,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Record payment
     setPaymentHistory((prev) => [payment, ...prev]);
 
-    // Free table if dine-in AND all food was already served
+    // Free table if dine-in AND all food was already served; otherwise mark OCCUPIED
     if (targetOrder.tableId && allServed) {
       setTables((prev) =>
         prev.map((t) =>
@@ -562,6 +566,21 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 seatedAt: undefined,
                 guestCount: undefined,
                 serverName: undefined
+              }
+            : t
+        )
+      );
+    } else if (targetOrder.tableId && !allServed) {
+      setTables((prev) =>
+        prev.map((t) =>
+          t.id === targetOrder.tableId
+            ? {
+                ...t,
+                status: 'OCCUPIED',
+                activeOrderId: updatedOrder.id,
+                seatedAt: t.seatedAt || now,
+                guestCount: updatedOrder.guestCount || t.guestCount || 2,
+                serverName: updatedOrder.serverName || t.serverName || 'Staff'
               }
             : t
         )
@@ -648,26 +667,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setOrderType = (type: OrderType, tableId?: string, tableName?: string) => {
-    if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
+    let baseOrder = activeOrder;
+    if (!baseOrder || baseOrder.paymentStatus === 'PAID') {
+      baseOrder = startQuickSale();
+    }
     const updatedOrder: Order = {
-      ...activeOrder,
+      ...baseOrder,
       type,
-      tableId,
+      tableId: type === 'DINE_IN' ? tableId : undefined,
       tableName: type === 'DINE_IN' ? tableName || 'Dine-In Table' : undefined,
       payOnPickup: type === 'TAKEAWAY' ? true : false
     };
 
-    if (type === 'DINE_IN' && tableId) {
-      setTables((prev) =>
-        prev.map((t) =>
-          t.id === tableId
-            ? { ...t, status: 'OCCUPIED', activeOrderId: updatedOrder.id, seatedAt: new Date().toISOString() }
-            : t
-        )
-      );
+    // Only update orders list if this order was already placed in orders
+    const isAlreadyPlaced = orders.some((o) => o.id === updatedOrder.id);
+    if (isAlreadyPlaced) {
+      setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
     }
-
-    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
     setActiveOrder(updatedOrder);
   };
 
