@@ -9,7 +9,9 @@ import {
   Clock,
   User,
   RotateCcw,
-  Store
+  Store,
+  ChefHat,
+  ExternalLink
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -40,6 +42,9 @@ export const Navbar: React.FC = () => {
 
   const occupiedCount = tables.filter((t) => t.status === 'OCCUPIED' || t.status === 'BILL_PRINTED').length;
   const unpaidCount = orders.filter((o) => o.paymentStatus === 'UNPAID').length;
+  const kitchenCount = orders.filter((o) =>
+    o.items.some((i) => i.kitchenStatus === 'SENT_TO_KITCHEN' || i.kitchenStatus === 'PREPARING')
+  ).length;
 
   return (
     <header className="navbar-container">
@@ -88,6 +93,16 @@ export const Navbar: React.FC = () => {
         </button>
 
         <button
+          className={`nav-tab-btn ${currentMode === 'KITCHEN' ? 'active' : ''}`}
+          onClick={() => setCurrentMode('KITCHEN')}
+          id="nav-kitchen-btn"
+        >
+          <ChefHat size={18} />
+          <span>Kitchen (KDS)</span>
+          {kitchenCount > 0 && <span className="nav-badge kitchen-badge">{kitchenCount} Live</span>}
+        </button>
+
+        <button
           className={`nav-tab-btn ${currentMode === 'ANALYTICS' ? 'active' : ''}`}
           onClick={() => setCurrentMode('ANALYTICS')}
           id="nav-analytics-btn"
@@ -114,8 +129,18 @@ export const Navbar: React.FC = () => {
         )}
       </div>
 
-      {/* Status Bar: Live Clock, Cashier & Shift Stats */}
+      {/* Status Bar: Live Clock, Cashier, Open Kitchen Window & Reset */}
       <div className="navbar-status">
+        <button
+          className="kds-launch-btn"
+          title="Open Kitchen Screen in a separate window or monitor"
+          onClick={() => window.open('/?view=kitchen', '_blank')}
+          id="btn-open-kitchen-window"
+        >
+          <ExternalLink size={14} />
+          <span>Kitchen Window</span>
+        </button>
+
         <div className="status-pill clock-pill">
           <Clock size={15} />
           <span className="mono-text">{timeStr}</span>

@@ -3274,3 +3274,624 @@ input, select, textarea {
   color: var(--text-dim);
 }
 
+/* ==========================================================================
+   KDS Navbar Launch & Global Toast
+   ========================================================================== */
+
+.kds-launch-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kds-launch-btn:hover {
+  background: #f59e0b;
+  color: #000;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.nav-badge.kitchen-badge {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+.pos-full-kitchen-view {
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 65px);
+  overflow: hidden;
+}
+
+.pos-global-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #f3f4f6;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  padding: 12px 24px;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastSlideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ==========================================================================
+   Kitchen Display System (KDS) Screen
+   ========================================================================== */
+
+.kds-screen-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background: #090d16;
+  color: #f3f4f6;
+  overflow: hidden;
+  user-select: none;
+}
+
+.kds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.kds-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kds-logo-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+}
+
+.kds-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #fff;
+}
+
+.kds-subtitle {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.kds-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.kds-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.kds-filter-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.kds-filter-btn.active {
+  background: #f97316;
+  color: #fff;
+}
+
+.count-tag {
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-weight: 800;
+}
+
+.kds-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kds-action-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.kds-action-icon-btn.active {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.kds-open-window-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kds-open-window-btn:hover {
+  background: #38bdf8;
+  color: #000;
+}
+
+.kds-back-pos-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kds-back-pos-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Tickets Grid */
+.kds-tickets-workspace {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.kds-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  color: #64748b;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.empty-chef-icon {
+  color: #334155;
+  margin-bottom: 16px;
+}
+
+.kds-empty-state h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.kds-empty-state p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.kds-tickets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+/* Ticket Card */
+.kds-ticket-card {
+  background: #131b2e;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+
+.kds-ticket-card:hover {
+  transform: translateY(-2px);
+}
+
+.kds-ticket-card.delay-low {
+  border-top: 5px solid #10b981;
+}
+
+.kds-ticket-card.delay-med {
+  border-top: 5px solid #f59e0b;
+}
+
+.kds-ticket-card.delay-high {
+  border-top: 5px solid #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+}
+
+.kds-ticket-card.ticket-bumped {
+  border-color: #059669;
+  opacity: 0.7;
+}
+
+.ticket-card-header {
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ticket-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.destination-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.ticket-order-num {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: #94a3b8;
+}
+
+.ticket-timer-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+}
+
+.ticket-timer-pill.delay-low {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.ticket-timer-pill.delay-med {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+}
+
+.ticket-timer-pill.delay-high {
+  background: rgba(239, 68, 68, 0.22);
+  color: #f87171;
+  animation: pulseGlow 1.5s infinite;
+}
+
+.ticket-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.ticket-meta-bar .meta-guest strong {
+  color: #fef08a;
+}
+
+/* Items List */
+.ticket-items-list {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 120px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.kds-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.kds-item-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.kds-item-row.item-done {
+  opacity: 0.5;
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.15);
+}
+
+.kds-item-row.item-done .kds-item-name {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.item-qty-col {
+  flex-shrink: 0;
+}
+
+.kds-qty {
+  font-size: 1rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.item-desc-col {
+  flex: 1;
+}
+
+.kds-item-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.kds-chef-note {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.item-check-col {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.item-status-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.item-status-icon.done {
+  background: #10b981;
+  color: #fff;
+}
+
+.item-status-icon.cooking {
+  background: rgba(249, 115, 22, 0.2);
+}
+
+.item-status-icon.sent {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Card Action Footer */
+.ticket-card-footer {
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  gap: 8px;
+}
+
+.btn-kds-action {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-kds-action.cook-btn {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.btn-kds-action.cook-btn:hover {
+  background: #f97316;
+  color: #fff;
+}
+
+.btn-kds-action.bump-btn {
+  background: #10b981;
+  color: #064e3b;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-kds-action.bump-btn:hover {
+  background: #34d399;
+}
+
+.btn-kds-action.bump-btn.bumped {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   Payment Modal & Paperless Digital Settle Card
+   ========================================================================== */
+
+.payment-success-dialog {
+  max-width: 440px;
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+.payment-success-content {
+  text-align: center;
+  padding: 36px 28px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.success-icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow: 0 0 25px rgba(52, 211, 153, 0.2);
+}
+
+.payment-success-content h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.success-order-num {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  margin-bottom: 20px;
+}
+
+.success-details-card {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.success-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.success-row strong {
+  color: #fff;
+  font-size: 1.05rem;
+}
+
+.success-row.change-highlight {
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.success-row.change-highlight strong {
+  font-size: 1.3rem;
+  font-family: var(--font-mono);
+}
+
+.success-done-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 14px;
+  font-size: 1rem;
+}
+

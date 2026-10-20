@@ -41,6 +41,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   // Payment method & cash tender state
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('CASH');
   const [cashTendered, setCashTendered] = useState<string>(totalAmount.toFixed(2));
+  const [isSettled, setIsSettled] = useState(false);
 
   const splitShare = totalAmount / splitCount;
   const tenderedNum = parseFloat(cashTendered) || 0;
@@ -60,9 +61,60 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       selectedMethod === 'CASH' ? changeDue : 0
     );
 
-    onPaymentSuccess(result.order, result.payment);
-    onClose();
+    if (onPaymentSuccess) {
+      onPaymentSuccess(result.order, result.payment);
+    }
+    setIsSettled(true);
   };
+
+  if (isSettled) {
+    return (
+      <div className="modal-backdrop">
+        <div className="modal-dialog payment-dialog payment-success-dialog">
+          <div className="modal-body payment-success-content">
+            <div className="success-icon-wrap">
+              <CheckCircle2 size={56} className="text-green" />
+            </div>
+            <h2>Payment Successful!</h2>
+            <p className="success-order-num">Order {order.orderNumber} settled & completed</p>
+            <div className="success-details-card">
+              <div className="success-row">
+                <span>Method:</span>
+                <strong>{selectedMethod}</strong>
+              </div>
+              <div className="success-row">
+                <span>Total Paid:</span>
+                <strong>${totalAmount.toFixed(2)}</strong>
+              </div>
+              {selectedMethod === 'CASH' && (
+                <>
+                  <div className="success-row">
+                    <span>Cash Tendered:</span>
+                    <span>${tenderedNum.toFixed(2)}</span>
+                  </div>
+                  {changeDue > 0 && (
+                    <div className="success-row change-highlight">
+                      <span>Change to Return:</span>
+                      <strong className="text-green">${changeDue.toFixed(2)}</strong>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <button
+              type="button"
+              className="btn-primary-action success-done-btn"
+              onClick={onClose}
+              autoFocus
+              id="btn-done-payment"
+            >
+              Done / Ready for Next Order
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-backdrop">
@@ -268,7 +320,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             id="btn-confirm-payment"
           >
             <CheckCircle2 size={18} />
-            <span>Complete & Print Receipt (${totalAmount.toFixed(2)})</span>
+            <span>Complete & Settle (${totalAmount.toFixed(2)})</span>
           </button>
         </div>
       </div>

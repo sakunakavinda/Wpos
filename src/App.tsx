@@ -8,67 +8,51 @@ import { ShiftView } from './components/ShiftView';
 import { OrderDrawer } from './components/OrderDrawer';
 import { TakeawayQueueBar } from './components/TakeawayQueueBar';
 
+import { KitchenDisplay } from './components/KitchenDisplay';
+
 // Modals
 import { OpenTableModal } from './components/modals/OpenTableModal';
 import { PaymentModal } from './components/modals/PaymentModal';
-import { ReceiptModal } from './components/modals/ReceiptModal';
-import { KOTModal } from './components/modals/KOTModal';
 import { TransferTableModal } from './components/modals/TransferTableModal';
 import { NewTakeawayModal } from './components/modals/NewTakeawayModal';
 
-import type { RestaurantTable, Order, OrderItem, PaymentRecord } from './types/pos';
+import type { RestaurantTable } from './types/pos';
 import './index.css';
 
 const POSMain: React.FC = () => {
-  const { currentMode, orders, printGuestCheck } = usePOS();
+  const { currentMode, printGuestCheck } = usePOS();
 
   // Modal states
   const [openTableTarget, setOpenTableTarget] = useState<RestaurantTable | null>(null);
   const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
-  const [receiptData, setReceiptData] = useState<{
-    order: Order;
-    payment?: PaymentRecord;
-    isPreBill?: boolean;
-  } | null>(null);
-  const [kotData, setKotData] = useState<{
-    order: Order;
-    items: OrderItem[];
-  } | null>(null);
   const [transferTableSource, setTransferTableSource] = useState<RestaurantTable | null>(null);
   const [isTakeawayModalOpen, setIsTakeawayModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Trigger pre-bill receipt modal
+  // Check if opened as dedicated standalone Kitchen Screen window (e.g. /?view=kitchen)
+  const isStandaloneKitchen = window.location.search.includes('view=kitchen');
+
+  // If dedicated kitchen window, render KitchenDisplay full screen immediately
+  if (isStandaloneKitchen) {
+    return <KitchenDisplay />;
+  }
+
+  // Handle guest check without printing receipt
   const handlePrintGuestCheck = (orderId: string) => {
-    const updatedOrder = printGuestCheck(orderId);
-    if (updatedOrder) {
-      setReceiptData({
-        order: updatedOrder,
-        isPreBill: true
-      });
-    }
+    printGuestCheck(orderId);
+    showToast('Table Bill Status marked. Ready for payment.');
   };
 
-  // Trigger KOT modal when items are sent to kitchen
-  const handleKOTModal = (newlySentItems: OrderItem[]) => {
-    // Find corresponding order
-    const parentOrder = orders.find((o) =>
-      o.items.some((i) => newlySentItems.some((n) => n.id === i.id))
-    );
-    if (parentOrder) {
-      setKotData({
-        order: parentOrder,
-        items: newlySentItems
-      });
-    }
+  // Toast notifier
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 3200);
   };
 
-  // When payment is settled
-  const handlePaymentSuccess = (order: Order, payment: PaymentRecord) => {
-    setReceiptData({
-      order,
-      payment,
-      isPreBill: false
-    });
+  const handleKOTModal = () => {
+    showToast('👨‍🍳 Order sent to Kitchen Screen (KOT)!');
   };
 
   return (
@@ -77,43 +61,56 @@ const POSMain: React.FC = () => {
       <Navbar />
 
       {/* Main Workspace Body */}
-      <div className="pos-main-body">
-        {/* Left / Center View Area */}
-        <main className="pos-view-workspace">
-          {currentMode === 'REGISTER' && <RegisterView />}
+      {currentMode === 'KITCHEN' ? (
+        <div className="pos-full-kitchen-view">
+          <KitchenDisplay />
+        </div>
+      ) : (
+        <div className="pos-main-body">
+          {/* Left / Center View Area */}
+          <main className="pos-view-workspace">
+            {currentMode === 'REGISTER' && <RegisterView />}
 
-          {currentMode === 'TABLES' && (
-            <TableView
-              onOpenTableModal={(table) => setOpenTableTarget(table)}
-              onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
-              onTransferModal={(table) => setTransferTableSource(table)}
-              onPrintGuestCheck={handlePrintGuestCheck}
-            />
-          )}
-
-          {currentMode === 'ORDERS' && (
-            <>
-              <TakeawayQueueBar
-                onNewTakeaway={() => setIsTakeawayModalOpen(true)}
+            {currentMode === 'TABLES' && (
+              <TableView
+                onOpenTableModal={(table) => setOpenTableTarget(table)}
                 onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
-              />
-              <ActiveOrdersView
-                onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
+                onTransferModal={(table) => setTransferTableSource(table)}
                 onPrintGuestCheck={handlePrintGuestCheck}
               />
-            </>
-          )}
+            )}
 
-          {currentMode === 'ANALYTICS' && <ShiftView />}
-        </main>
+            {currentMode === 'ORDERS' && (
+              <>
+                <TakeawayQueueBar
+                  onNewTakeaway={() => setIsTakeawayModalOpen(true)}
+                  onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
+                />
+                <ActiveOrdersView
+                  onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
+                  onPrintGuestCheck={handlePrintGuestCheck}
+                />
+              </>
+            )}
 
-        {/* Right Cart / Active Order Drawer */}
-        <OrderDrawer
-          onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
-          onPrintGuestCheck={handlePrintGuestCheck}
-          onKOTModal={handleKOTModal}
-        />
-      </div>
+            {currentMode === 'ANALYTICS' && <ShiftView />}
+          </main>
+
+          {/* Right Cart / Active Order Drawer */}
+          <OrderDrawer
+            onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
+            onPrintGuestCheck={handlePrintGuestCheck}
+            onKOTModal={handleKOTModal}
+          />
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="pos-global-toast" role="alert">
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
       {/* MODALS */}
       {isTakeawayModalOpen && (
@@ -130,24 +127,9 @@ const POSMain: React.FC = () => {
         <PaymentModal
           orderId={paymentOrderId}
           onClose={() => setPaymentOrderId(null)}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
-      )}
-
-      {receiptData && (
-        <ReceiptModal
-          order={receiptData.order}
-          payment={receiptData.payment}
-          isPreBill={receiptData.isPreBill}
-          onClose={() => setReceiptData(null)}
-        />
-      )}
-
-      {kotData && (
-        <KOTModal
-          order={kotData.order}
-          items={kotData.items}
-          onClose={() => setKotData(null)}
+          onPaymentSuccess={() => {
+            showToast('✅ Payment settled successfully!');
+          }}
         />
       )}
 

@@ -6,6 +6,7 @@ import type {
   Order,
   OrderItem,
   OrderType,
+  KitchenStatus,
   ShiftSession,
   TableSection,
   PaymentMethod,
@@ -19,7 +20,7 @@ import {
   INITIAL_SHIFT
 } from '../data/mockData';
 
-export type AppMode = 'TABLES' | 'REGISTER' | 'ORDERS' | 'ANALYTICS';
+export type AppMode = 'REGISTER' | 'TABLES' | 'ORDERS' | 'ANALYTICS' | 'KITCHEN';
 
 interface POSContextType {
   tables: RestaurantTable[];
@@ -74,6 +75,9 @@ interface POSContextType {
   setOrderCustomer: (customerName?: string, token?: string) => void;
   clearActiveCart: () => void;
   parkActiveOrder: () => OrderItem[];
+  updateOrderItemStatus: (orderId: string, itemId: string, status: KitchenStatus) => void;
+  markOrderCooking: (orderId: string) => void;
+  bumpOrderKitchen: (orderId: string) => void;
   closeActiveOrderDrawer: () => void;
   closeShiftSession: (countedCash: number) => void;
   resetAllData: () => void;
@@ -109,7 +113,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
-  const [currentMode, setCurrentMode] = useState<AppMode>('REGISTER');
+  const [currentMode, setCurrentMode] = useState<AppMode>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'kitchen' || window.location.hash.includes('kitchen')) {
+      return 'KITCHEN';
+    }
+    return 'REGISTER';
+  });
   const [selectedSection, setSelectedSection] = useState<TableSection | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('cat-all');
@@ -130,6 +140,36 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}payments`, JSON.stringify(paymentHistory));
   }, [paymentHistory]);
+
+  // Cross-window synchronization between POS Register and Kitchen Screen
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!e.key) return;
+      if (e.key === `${STORAGE_KEY_PREFIX}orders` && e.newValue) {
+        try {
+          setOrders(JSON.parse(e.newValue));
+        } catch {
+          // ignore
+        }
+      }
+      if (e.key === `${STORAGE_KEY_PREFIX}tables` && e.newValue) {
+        try {
+          setTables(JSON.parse(e.newValue));
+        } catch {
+          // ignore
+        }
+      }
+      if (e.key === `${STORAGE_KEY_PREFIX}shift` && e.newValue) {
+        try {
+          setShift(JSON.parse(e.newValue));
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Keep activeOrder synced with orders array
   useEffect(() => {
@@ -613,6 +653,52 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return sent;
   };
 
+  const updateOrderItemStatus = (orderId: string, itemId: string, status: KitchenStatus) => {
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== orderId) return order;
+        const updatedItems = order.items.map((i) => (i.id === itemId ? { ...i, kitchenStatus: status } : i));
+        const allServed = updatedItems.every((i) => i.kitchenStatus === 'SERVED');
+        return {
+          ...order,
+          items: updatedItems,
+          status: allServed ? 'SERVED' : order.status,
+          takeawayStatus: order.type === 'TAKEAWAY' && allServed ? 'READY_FOR_PICKUP' : order.takeawayStatus
+        };
+      })
+    );
+  };
+
+  const markOrderCooking = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== orderId) return order;
+        return {
+          ...order,
+          status: 'PREPARING',
+          takeawayStatus: order.type === 'TAKEAWAY' ? 'PREPARING' : order.takeawayStatus,
+          items: order.items.map((i) =>
+            i.kitchenStatus === 'SENT_TO_KITCHEN' ? { ...i, kitchenStatus: 'PREPARING' as const } : i
+          )
+        };
+      })
+    );
+  };
+
+  const bumpOrderKitchen = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== orderId) return order;
+        return {
+          ...order,
+          status: 'SERVED',
+          takeawayStatus: order.type === 'TAKEAWAY' ? 'READY_FOR_PICKUP' : order.takeawayStatus,
+          items: order.items.map((i) => ({ ...i, kitchenStatus: 'SERVED' as const }))
+        };
+      })
+    );
+  };
+
   const closeActiveOrderDrawer = () => {
     setActiveOrder(null);
   };
@@ -677,6 +763,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setOrderCustomer,
         clearActiveCart,
         parkActiveOrder,
+        updateOrderItemStatus,
+        markOrderCooking,
+        bumpOrderKitchen,
         closeActiveOrderDrawer,
         closeShiftSession,
         resetAllData
