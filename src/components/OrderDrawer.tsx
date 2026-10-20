@@ -245,7 +245,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
         {items.length === 0 ? (
           <div className="ready-to-add-placeholder">
             <div className="tap-prompt-icon">👆</div>
-            <h4>Ticket Ready</h4>
+            <h4>New Order</h4>
             <p>Tap any food or drink item on the menu to add it immediately to this order.</p>
           </div>
         ) : (

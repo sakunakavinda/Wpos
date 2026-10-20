@@ -195,7 +195,6 @@ export const KitchenDisplay: React.FC = () => {
               // Delay color coding: < 5m green, 5-12m yellow, > 12m red
               const delayClass = elapsed > 12 ? 'delay-high' : elapsed > 5 ? 'delay-med' : 'delay-low';
               const isTakeaway = order.type === 'TAKEAWAY';
-              const allServed = order.items.every((i) => i.kitchenStatus === 'SERVED');
 
               // Table or Token label
               let destinationLabel = '';
@@ -211,7 +210,7 @@ export const KitchenDisplay: React.FC = () => {
               return (
                 <div
                   key={order.id}
-                  className={`kds-ticket-card ${delayClass} ${allServed ? 'ticket-bumped' : ''}`}
+                  className={`kds-ticket-card ${delayClass}`}
                   id={`kds-ticket-${order.id}`}
                 >
                   {/* Ticket Header */}
@@ -282,29 +281,27 @@ export const KitchenDisplay: React.FC = () => {
 
                   {/* Ticket Action Footer */}
                   <div className="ticket-card-footer">
-                    {!allServed && (
-                      <button
-                        type="button"
-                        className="btn-kds-action cook-btn"
-                        onClick={() => markOrderCooking(order.id)}
-                        title="Mark items as cooking"
-                      >
-                        <Flame size={15} />
-                        <span>Cooking</span>
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="btn-kds-action cook-btn"
+                      onClick={() => markOrderCooking(order.id)}
+                      title="Mark items as cooking"
+                    >
+                      <Flame size={15} />
+                      <span>Cooking</span>
+                    </button>
 
                     <button
                       type="button"
-                      className={`btn-kds-action bump-btn ${allServed ? 'bumped' : ''}`}
+                      className="btn-kds-action bump-btn"
                       onClick={() => {
                         bumpOrderKitchen(order.id);
                         playChime();
                       }}
-                      title="Mark all items prepared and ready"
+                      title="Mark ready and bump order off kitchen screen"
                     >
                       <CheckCircle2 size={16} />
-                      <span>{allServed ? 'Ticket Ready ✓' : 'Mark Ready / Bump'}</span>
+                      <span>Mark Ready / Bump</span>
                     </button>
                   </div>
                 </div>
