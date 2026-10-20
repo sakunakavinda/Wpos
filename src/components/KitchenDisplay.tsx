@@ -240,9 +240,11 @@ export const KitchenDisplay: React.FC = () => {
 
                   {/* Items Checklist */}
                   <div className="ticket-items-list">
-                    {order.items.map((item) => {
-                      const isItemDone = item.kitchenStatus === 'SERVED';
-                      const isCooking = item.kitchenStatus === 'PREPARING';
+                    {order.items
+                      .filter((item) => item.kitchenStatus !== 'DRAFT')
+                      .map((item) => {
+                        const isItemDone = item.kitchenStatus === 'SERVED';
+                        const isCooking = item.kitchenStatus === 'PREPARING';
 
                       return (
                         <div

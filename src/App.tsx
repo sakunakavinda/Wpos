@@ -48,7 +48,7 @@ const POSMain: React.FC = () => {
   };
 
   const handleKOTModal = () => {
-    showToast('👨‍🍳 Order sent to Kitchen Screen (KOT)!');
+    showToast('👨‍🍳 Order & Kitchen KOT updated!');
   };
 
   return (

@@ -389,7 +389,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       items: updatedItems
     };
 
-    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    // Keep draft additions in activeOrder; do not update orders list until Update or Send is clicked
     setActiveOrder(updatedOrder);
   };
 
@@ -414,7 +414,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       items: updatedItems
     };
 
-    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    const hasDrafts = updatedItems.some((i) => i.kitchenStatus === 'DRAFT');
+    if (!hasDrafts) {
+      setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    }
     setActiveOrder(updatedOrder);
   };
 
@@ -422,7 +425,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
     const updatedItems = activeOrder.items.filter((i) => i.id !== itemId);
     const updatedOrder = { ...activeOrder, items: updatedItems };
-    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    const hasDrafts = updatedItems.some((i) => i.kitchenStatus === 'DRAFT');
+    if (!hasDrafts) {
+      setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    }
     setActiveOrder(updatedOrder);
   };
 
@@ -430,7 +436,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!activeOrder || activeOrder.paymentStatus === 'PAID') return;
     const updatedItems = activeOrder.items.map((i) => (i.id === itemId ? { ...i, notes } : i));
     const updatedOrder = { ...activeOrder, items: updatedItems };
-    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    const hasDrafts = updatedItems.some((i) => i.kitchenStatus === 'DRAFT');
+    if (!hasDrafts) {
+      setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    }
     setActiveOrder(updatedOrder);
   };
 

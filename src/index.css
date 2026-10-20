@@ -1546,8 +1546,31 @@ input, select, textarea {
 
 .pay-btn:hover { background: #34d399; }
 .pay-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
+}
+
+.footer-btn.update-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.footer-btn.update-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.footer-btn.btn-faded-disabled {
+  opacity: 0.32 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.7);
+  box-shadow: none !important;
+  pointer-events: none;
 }
 
 /* ==========================================================================

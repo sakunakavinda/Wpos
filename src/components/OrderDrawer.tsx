@@ -39,7 +39,8 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
     setOrderType,
     setOrderCustomer,
     clearActiveCart,
-    parkActiveOrder
+    parkActiveOrder,
+    sendDraftsToKitchen
   } = usePOS();
 
   const [editingNoteItemId, setEditingNoteItemId] = useState<string | null>(null);
@@ -66,8 +67,21 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
   );
   const servedItems = items.filter((i) => i.kitchenStatus === 'SERVED');
 
+  const hasCommittedItems = items.some((i) => i.kitchenStatus !== 'DRAFT');
+  const hasDraftItems = draftItems.length > 0;
+  // An existing unpaid order that has newly added draft items waiting to be sent/updated
+  const isExistingUnpaidOrderWithDrafts = !isPaid && hasCommittedItems && hasDraftItems;
+
   const handleHoldAndPayLater = () => {
     const newlySent = parkActiveOrder();
+    if (newlySent.length > 0) {
+      onKOTModal(newlySent);
+    }
+  };
+
+  const handleUpdateOrderAndKOT = () => {
+    if (!activeOrder) return;
+    const newlySent = sendDraftsToKitchen();
     if (newlySent.length > 0) {
       onKOTModal(newlySent);
     }
@@ -360,27 +374,44 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
               </button>
             )}
 
-            {/* 1. Pay Later / Hold button: sends to kitchen and clears screen for next customer */}
-            <button
-              className="footer-btn hold-pickup-btn"
-              onClick={handleHoldAndPayLater}
-              disabled={items.length === 0}
-              title={
-                activeOrder?.type === 'DINE_IN'
-                  ? 'Send items to kitchen & keep table open for post-dine payment'
-                  : 'Send items to kitchen & park in pickup queue for payment upon collection'
-              }
-              id="btn-hold-pay-later"
-            >
-              <Flame size={17} />
-              <span>Send / Pay Later</span>
-            </button>
+            {/* 1. Send / Pay Later OR Update button */}
+            {isExistingUnpaidOrderWithDrafts ? (
+              <button
+                className="footer-btn update-btn"
+                onClick={handleUpdateOrderAndKOT}
+                id="btn-update-order-kot"
+                title="Send new items to kitchen & update KOT"
+              >
+                <RotateCcw size={17} />
+                <span>Update</span>
+              </button>
+            ) : (
+              <button
+                className="footer-btn hold-pickup-btn"
+                onClick={handleHoldAndPayLater}
+                disabled={items.length === 0 || (hasCommittedItems && draftItems.length === 0)}
+                title={
+                  activeOrder?.type === 'DINE_IN'
+                    ? 'Send items to kitchen & keep table open for post-dine payment'
+                    : 'Send items to kitchen & park in pickup queue for payment upon collection'
+                }
+                id="btn-hold-pay-later"
+              >
+                <Flame size={17} />
+                <span>Send / Pay Later</span>
+              </button>
+            )}
 
-            {/* 2. Pay Now button: instant checkout */}
+            {/* 2. Pay Now button: instant checkout (faded and unclickable until new items are updated) */}
             <button
-              className="footer-btn pay-btn"
+              className={`footer-btn pay-btn ${isExistingUnpaidOrderWithDrafts ? 'btn-faded-disabled' : ''}`}
               onClick={handlePayNow}
-              disabled={items.length === 0}
+              disabled={items.length === 0 || isExistingUnpaidOrderWithDrafts}
+              title={
+                isExistingUnpaidOrderWithDrafts
+                  ? 'Please click Update to send new items to kitchen before proceeding to payment'
+                  : `Pay Now ($${grandTotal.toFixed(2)})`
+              }
               id="btn-pay-now"
             >
               <CreditCard size={17} />
