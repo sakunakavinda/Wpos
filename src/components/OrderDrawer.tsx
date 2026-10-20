@@ -11,7 +11,8 @@ import {
   MessageSquare,
   Users,
   AlertTriangle,
-  Percent
+  Percent,
+  ShoppingBag
 } from 'lucide-react';
 import type { OrderItem } from '../types/pos';
 
@@ -95,7 +96,15 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
             {activeOrder.tableName ? (
               <span className="table-highlight">{activeOrder.tableName}</span>
             ) : (
-              <span>Takeaway Customer</span>
+              <div className="takeaway-client-info">
+                <span className="client-name">{activeOrder.customerName || 'Takeaway Customer'}</span>
+                {activeOrder.pickupToken && (
+                  <span className="token-chip">{activeOrder.pickupToken}</span>
+                )}
+                {activeOrder.customerPhone && (
+                  <span className="phone-chip">{activeOrder.customerPhone}</span>
+                )}
+              </div>
             )}
             {activeOrder.guestCount && (
               <span className="guest-badge">
@@ -245,7 +254,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
 
       {/* Bottom Actions Bar */}
       <div className="drawer-footer-actions">
-        {activeOrder.type === 'DINE_IN' && draftItems.length > 0 && (
+        {draftItems.length > 0 && (
           <button
             className="footer-btn send-kot-btn"
             onClick={handleSendToKitchen}
@@ -267,6 +276,24 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
           </button>
         )}
 
+        {activeOrder.type === 'TAKEAWAY' && (
+          <button
+            className="footer-btn hold-pickup-btn"
+            onClick={() => {
+              if (draftItems.length > 0) {
+                handleSendToKitchen();
+              }
+              closeActiveOrderDrawer();
+            }}
+            disabled={activeOrder.items.length === 0}
+            title="Fire to kitchen & park until customer arrives to pick up and pay"
+            id="btn-hold-pickup"
+          >
+            <ShoppingBag size={17} />
+            <span>Park / Pay on Pickup</span>
+          </button>
+        )}
+
         <button
           className="footer-btn pay-btn"
           onClick={() => onPaymentModal(activeOrder.id)}
@@ -274,7 +301,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
           id="btn-pay-now"
         >
           <CreditCard size={17} />
-          <span>Pay & Settle (${grandTotal.toFixed(2)})</span>
+          <span>Pay Now (${grandTotal.toFixed(2)})</span>
         </button>
       </div>
     </aside>

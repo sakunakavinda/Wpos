@@ -2834,3 +2834,318 @@ input, select, textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Takeaway Pickup Queue & Takeaway Modal Styles
+   ========================================================================== */
+
+.takeaway-queue-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.queue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.queue-title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.text-amber { color: #f59e0b; }
+
+.queue-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.queue-badge {
+  font-size: 0.72rem;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.btn-new-takeaway {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-primary-light);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.btn-new-takeaway:hover {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+.takeaway-cards-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.empty-queue-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  padding: 8px 0;
+}
+
+.takeaway-queue-card {
+  min-width: 260px;
+  max-width: 290px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.takeaway-queue-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-medium);
+}
+
+.takeaway-queue-card.preparing {
+  border-left: 3px solid #f59e0b;
+}
+
+.takeaway-queue-card.ready {
+  border-left: 3px solid #10b981;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, var(--bg-surface-elevated) 100%);
+}
+
+.card-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.token-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: #e2e8f0;
+}
+
+.card-customer-line {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.customer-phone {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.card-meta-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.meta-price {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: #38bdf8;
+  font-size: 0.88rem;
+}
+
+.card-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.btn-card-action {
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ready-btn {
+  background: var(--color-available-bg);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.ready-btn:hover {
+  background: var(--color-available);
+  color: #000;
+}
+
+.pay-pickup-btn {
+  background: #f59e0b;
+  color: #000;
+  flex: 1;
+  justify-content: center;
+}
+
+.pay-pickup-btn:hover {
+  background: #fbbf24;
+}
+
+/* Takeaway Modal */
+.takeaway-dialog {
+  max-width: 500px;
+}
+
+.payment-timing-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.timing-card {
+  display: flex;
+  gap: 12px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.timing-card:hover {
+  background: var(--bg-surface-elevated);
+}
+
+.timing-card.selected {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+}
+
+.timing-radio {
+  margin-top: 2px;
+}
+
+.radio-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--text-dim);
+  display: inline-block;
+}
+
+.radio-dot.active {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary);
+}
+
+.timing-info strong {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.timing-info p {
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.register-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-new-takeaway-reg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.btn-new-takeaway-reg:hover {
+  background: #f59e0b;
+  color: #000;
+}
+
+.hold-pickup-btn {
+  background: #f59e0b;
+  color: #000;
+}
+
+.hold-pickup-btn:hover {
+  background: #fbbf24;
+}
+
+.takeaway-client-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.client-name {
+  font-weight: 700;
+  color: #fef08a;
+}
+
+.token-chip {
+  background: rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  color: #38bdf8;
+}
+
+.phone-chip {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+

@@ -559,6 +559,93 @@ export const INITIAL_ORDERS: Order[] = [
         kitchenStatus: 'SERVED'
       }
     ]
+  },
+  {
+    id: 'ord-201',
+    orderNumber: '#TAK-201',
+    type: 'TAKEAWAY',
+    customerName: 'Jessica Parker',
+    customerPhone: '(555) 789-2311',
+    pickupToken: 'Pickup #04',
+    takeawayStatus: 'PREPARING',
+    payOnPickup: true,
+    serverName: 'Alex Morgan',
+    status: 'PREPARING',
+    paymentStatus: 'UNPAID',
+    discountPercent: 0,
+    tipAmount: 0,
+    taxRate: 0.08,
+    createdAt: new Date(Date.now() - 12 * 60000).toISOString(),
+    notes: 'Packaging: Extra napkins & wooden utensils',
+    items: [
+      {
+        id: 'item-201-1',
+        productId: 'prod-10',
+        name: 'Wagyu Smash Burger & Truffle Bacon',
+        price: 19.50,
+        quantity: 1,
+        round: 1,
+        kitchenStatus: 'PREPARING',
+        notes: 'No pickles'
+      },
+      {
+        id: 'item-201-2',
+        productId: 'prod-1',
+        name: 'Truffle Parmesan Fries',
+        price: 11.50,
+        quantity: 1,
+        round: 1,
+        kitchenStatus: 'PREPARING'
+      },
+      {
+        id: 'item-201-3',
+        productId: 'prod-17',
+        name: 'Double Flat White',
+        price: 4.80,
+        quantity: 1,
+        round: 1,
+        kitchenStatus: 'PREPARING',
+        notes: 'Oat milk if available'
+      }
+    ]
+  },
+  {
+    id: 'ord-202',
+    orderNumber: '#TAK-202',
+    type: 'TAKEAWAY',
+    customerName: 'David Kim',
+    customerPhone: '(555) 345-9821',
+    pickupToken: 'Buzzer #7',
+    takeawayStatus: 'READY_FOR_PICKUP',
+    payOnPickup: true,
+    serverName: 'Alex Morgan',
+    status: 'SERVED',
+    paymentStatus: 'UNPAID',
+    discountPercent: 0,
+    tipAmount: 0,
+    taxRate: 0.08,
+    createdAt: new Date(Date.now() - 25 * 60000).toISOString(),
+    notes: 'Hot bag packed at counter',
+    items: [
+      {
+        id: 'item-202-1',
+        productId: 'prod-7',
+        name: 'Neapolitan Margherita D.O.P.',
+        price: 18.00,
+        quantity: 1,
+        round: 1,
+        kitchenStatus: 'SERVED'
+      },
+      {
+        id: 'item-202-2',
+        productId: 'prod-16',
+        name: 'Sparkling Aperol Spritz',
+        price: 13.50,
+        quantity: 1,
+        round: 1,
+        kitchenStatus: 'SERVED'
+      }
+    ]
   }
 ];
 

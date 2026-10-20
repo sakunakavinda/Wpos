@@ -55,6 +55,8 @@ export type OrderStatus = 'OPEN' | 'PREPARING' | 'SERVED' | 'COMPLETED' | 'CANCE
 
 export type PaymentStatus = 'UNPAID' | 'PARTIALLY_PAID' | 'PAID';
 
+export type TakeawayStatus = 'PREPARING' | 'READY_FOR_PICKUP' | 'COLLECTED';
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -62,6 +64,10 @@ export interface Order {
   tableId?: string;
   tableName?: string;
   customerName?: string;
+  customerPhone?: string;
+  pickupToken?: string; // e.g., Token #04 or Buzzer #2
+  takeawayStatus?: TakeawayStatus;
+  payOnPickup?: boolean; // Customer pays when collecting the prepared food
   guestCount?: number;
   serverName: string;
   items: OrderItem[];

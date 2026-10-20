@@ -44,6 +44,14 @@ interface POSContextType {
   openTable: (tableId: string, guestCount: number, customerName?: string, serverName?: string) => Order;
   selectOrderForTable: (tableId: string) => void;
   startQuickSale: () => Order;
+  startTakeawayOrder: (
+    customerName?: string,
+    phone?: string,
+    pickupToken?: string,
+    payOnPickup?: boolean
+  ) => Order;
+  markTakeawayReady: (orderId: string) => void;
+  updateTakeawayDetails: (orderId: string, details: Partial<Order>) => void;
   addItemToActiveOrder: (product: Product, notes?: string) => void;
   updateItemQuantity: (itemId: string, delta: number) => void;
   removeItemFromOrder: (itemId: string) => void;
@@ -214,6 +222,64 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newOrder;
   };
 
+  const startTakeawayOrder = (
+    customerName: string = 'Takeaway Guest',
+    phone?: string,
+    pickupToken?: string,
+    payOnPickup: boolean = true
+  ): Order => {
+    const newOrderNumber = `#TAK-${Math.floor(100 + Math.random() * 900)}`;
+    const newOrderId = `ord-tak-${Date.now()}`;
+    const token = pickupToken || `Pickup #${Math.floor(1 + Math.random() * 20)}`;
+
+    const newOrder: Order = {
+      id: newOrderId,
+      orderNumber: newOrderNumber,
+      type: 'TAKEAWAY',
+      customerName,
+      customerPhone: phone,
+      pickupToken: token,
+      takeawayStatus: 'PREPARING',
+      payOnPickup,
+      serverName: shift.cashierName,
+      items: [],
+      status: 'OPEN',
+      paymentStatus: 'UNPAID',
+      discountPercent: 0,
+      tipAmount: 0,
+      taxRate: 0.08,
+      createdAt: new Date().toISOString()
+    };
+
+    setOrders((prev) => [newOrder, ...prev]);
+    setActiveOrder(newOrder);
+    setCurrentMode('REGISTER');
+    return newOrder;
+  };
+
+  const markTakeawayReady = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? {
+              ...o,
+              takeawayStatus: 'READY_FOR_PICKUP',
+              status: 'SERVED'
+            }
+          : o
+      )
+    );
+  };
+
+  const updateTakeawayDetails = (orderId: string, details: Partial<Order>) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, ...details } : o))
+    );
+    if (activeOrder && activeOrder.id === orderId) {
+      setActiveOrder((prev) => (prev ? { ...prev, ...details } : null));
+    }
+  };
+
   const addItemToActiveOrder = (product: Product, notes?: string) => {
     let targetOrder = activeOrder;
 
@@ -325,7 +391,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedOrder: Order = {
       ...activeOrder,
       items: updatedItems,
-      status: 'PREPARING'
+      status: 'PREPARING',
+      takeawayStatus: activeOrder.type === 'TAKEAWAY' ? 'PREPARING' : activeOrder.takeawayStatus,
+      payOnPickup: activeOrder.type === 'TAKEAWAY' ? true : activeOrder.payOnPickup
     };
 
     setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
@@ -527,6 +595,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         openTable,
         selectOrderForTable,
         startQuickSale,
+        startTakeawayOrder,
+        markTakeawayReady,
+        updateTakeawayDetails,
         addItemToActiveOrder,
         updateItemQuantity,
         removeItemFromOrder,

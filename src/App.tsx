@@ -6,6 +6,7 @@ import { RegisterView } from './components/RegisterView';
 import { ActiveOrdersView } from './components/ActiveOrdersView';
 import { ShiftView } from './components/ShiftView';
 import { OrderDrawer } from './components/OrderDrawer';
+import { TakeawayQueueBar } from './components/TakeawayQueueBar';
 
 // Modals
 import { OpenTableModal } from './components/modals/OpenTableModal';
@@ -13,6 +14,7 @@ import { PaymentModal } from './components/modals/PaymentModal';
 import { ReceiptModal } from './components/modals/ReceiptModal';
 import { KOTModal } from './components/modals/KOTModal';
 import { TransferTableModal } from './components/modals/TransferTableModal';
+import { NewTakeawayModal } from './components/modals/NewTakeawayModal';
 
 import type { RestaurantTable, Order, OrderItem, PaymentRecord } from './types/pos';
 import './index.css';
@@ -33,6 +35,7 @@ const POSMain: React.FC = () => {
     items: OrderItem[];
   } | null>(null);
   const [transferTableSource, setTransferTableSource] = useState<RestaurantTable | null>(null);
+  const [isTakeawayModalOpen, setIsTakeawayModalOpen] = useState(false);
 
   // Trigger pre-bill receipt modal
   const handlePrintGuestCheck = (orderId: string) => {
@@ -77,6 +80,14 @@ const POSMain: React.FC = () => {
       <div className="pos-main-body">
         {/* Left / Center View Area */}
         <main className="pos-view-workspace">
+          {/* Always display Takeaway Queue in Register or Orders view */}
+          {(currentMode === 'REGISTER' || currentMode === 'ORDERS') && (
+            <TakeawayQueueBar
+              onNewTakeaway={() => setIsTakeawayModalOpen(true)}
+              onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
+            />
+          )}
+
           {currentMode === 'TABLES' && (
             <TableView
               onOpenTableModal={(table) => setOpenTableTarget(table)}
@@ -86,7 +97,9 @@ const POSMain: React.FC = () => {
             />
           )}
 
-          {currentMode === 'REGISTER' && <RegisterView />}
+          {currentMode === 'REGISTER' && (
+            <RegisterView onNewTakeawayModal={() => setIsTakeawayModalOpen(true)} />
+          )}
 
           {currentMode === 'ORDERS' && (
             <ActiveOrdersView
@@ -107,6 +120,9 @@ const POSMain: React.FC = () => {
       </div>
 
       {/* MODALS */}
+      {isTakeawayModalOpen && (
+        <NewTakeawayModal onClose={() => setIsTakeawayModalOpen(false)} />
+      )}
       {openTableTarget && (
         <OpenTableModal
           table={openTableTarget}

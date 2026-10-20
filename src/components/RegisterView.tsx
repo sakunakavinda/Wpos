@@ -11,10 +11,15 @@ import {
   Grid,
   Barcode,
   Plus,
-  Check
+  Check,
+  ShoppingBag
 } from 'lucide-react';
 
-export const RegisterView: React.FC = () => {
+interface RegisterViewProps {
+  onNewTakeawayModal?: () => void;
+}
+
+export const RegisterView: React.FC<RegisterViewProps> = ({ onNewTakeawayModal }) => {
   const {
     products,
     categories,
@@ -107,20 +112,34 @@ export const RegisterView: React.FC = () => {
           ))}
         </div>
 
-        {/* Barcode scanner simulator */}
-        <form className="barcode-simulator-bar" onSubmit={handleBarcodeSubmit}>
-          <Barcode size={18} className="barcode-icon" />
-          <input
-            type="text"
-            placeholder="Scan / Enter Barcode or SKU..."
-            value={barcodeInput}
-            onChange={(e) => setBarcodeInput(e.target.value)}
-            className="barcode-input"
-          />
-          <button type="submit" className="barcode-submit-btn">
-            Scan
-          </button>
-        </form>
+        <div className="register-actions-right">
+          {onNewTakeawayModal && (
+            <button
+              type="button"
+              className="btn-new-takeaway-reg"
+              onClick={onNewTakeawayModal}
+              id="btn-reg-new-takeaway"
+            >
+              <ShoppingBag size={15} />
+              <span>+ Takeaway / Pickup</span>
+            </button>
+          )}
+
+          {/* Barcode scanner simulator */}
+          <form className="barcode-simulator-bar" onSubmit={handleBarcodeSubmit}>
+            <Barcode size={18} className="barcode-icon" />
+            <input
+              type="text"
+              placeholder="Scan Barcode / SKU..."
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              className="barcode-input"
+            />
+            <button type="submit" className="barcode-submit-btn">
+              Scan
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* Barcode feedback alert */}
