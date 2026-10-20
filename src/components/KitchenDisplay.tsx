@@ -283,12 +283,18 @@ export const KitchenDisplay: React.FC = () => {
                   <div className="ticket-card-footer">
                     <button
                       type="button"
-                      className="btn-kds-action cook-btn"
+                      className={`btn-kds-action cook-btn ${
+                        order.items.length > 0 && order.items.every((i) => i.kitchenStatus === 'PREPARING') ? 'active' : ''
+                      }`}
                       onClick={() => markOrderCooking(order.id)}
-                      title="Mark items as cooking"
+                      title="Apply cooking status to all items"
                     >
                       <Flame size={15} />
-                      <span>Cooking</span>
+                      <span>
+                        {order.items.length > 0 && order.items.every((i) => i.kitchenStatus === 'PREPARING')
+                          ? 'Cooking 🔥'
+                          : 'Cooking'}
+                      </span>
                     </button>
 
                     <button

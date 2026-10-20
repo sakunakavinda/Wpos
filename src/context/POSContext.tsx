@@ -721,12 +721,22 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...order,
           status: 'PREPARING',
           takeawayStatus: order.type === 'TAKEAWAY' ? 'PREPARING' : order.takeawayStatus,
-          items: order.items.map((i) =>
-            i.kitchenStatus === 'SENT_TO_KITCHEN' ? { ...i, kitchenStatus: 'PREPARING' as const } : i
-          )
+          // Apply cooking status to all items in the order commonly
+          items: order.items.map((i) => ({ ...i, kitchenStatus: 'PREPARING' as const }))
         };
       })
     );
+    if (activeOrder && activeOrder.id === orderId) {
+      setActiveOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'PREPARING',
+              items: prev.items.map((i) => ({ ...i, kitchenStatus: 'PREPARING' as const }))
+            }
+          : null
+      );
+    }
   };
 
   const bumpOrderKitchen = (orderId: string) => {

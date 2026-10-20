@@ -3902,6 +3902,13 @@ input, select, textarea {
   color: #fff;
 }
 
+.btn-kds-action.cook-btn.active {
+  background: #f97316;
+  color: #fff;
+  border-color: #f97316;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
 .btn-kds-action.bump-btn {
   background: #10b981;
   color: #064e3b;
