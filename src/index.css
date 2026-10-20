@@ -1629,19 +1629,23 @@ input, select, textarea {
   gap: 12px;
 }
 
-.order-summary-card.unpaid {
+.order-summary-card.card-unpaid {
   border-left: 4px solid var(--color-occupied);
 }
 
-.order-summary-card.completed {
-  border-left: 4px solid var(--color-available);
-  opacity: 0.85;
+.order-summary-card.card-paid {
+  border-left: 4px solid #10b981;
+}
+
+.order-summary-card.card-preparing {
+  box-shadow: 0 4px 18px rgba(249, 115, 22, 0.12);
 }
 
 .order-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
 .order-card-id-block {
@@ -1663,21 +1667,73 @@ input, select, textarea {
   font-weight: 600;
 }
 
+.order-badges-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .payment-badge {
   font-size: 0.74rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 12px;
+  white-space: nowrap;
 }
 
 .payment-badge.unpaid {
   background: rgba(245, 158, 11, 0.15);
   color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .payment-badge.paid {
-  background: var(--color-available-bg);
+  background: rgba(16, 185, 129, 0.15);
   color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.prep-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.prep-badge.prep-cooking {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+.prep-badge.prep-sent {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.prep-badge.prep-ready {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.prep-badge.prep-draft {
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+.count-pill {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-left: 4px;
 }
 
 .customer-row {
@@ -1790,6 +1846,57 @@ input, select, textarea {
 .order-btn.pay-btn {
   background: var(--color-available);
   color: #052e16;
+}
+
+.order-btn.collect-btn {
+  background: #10b981;
+  color: #064e3b;
+  font-weight: 800;
+}
+
+.order-btn.collect-btn:hover {
+  background: #34d399;
+}
+
+.order-btn.ready-quick-btn {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.order-btn.ready-quick-btn:hover {
+  background: #f97316;
+  color: #fff;
+}
+
+.snapshot-pill.item-served {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.card-status-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.payment-mini-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+}
+
+.payment-mini-badge.paid {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.payment-mini-badge.unpaid {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 /* ==========================================================================

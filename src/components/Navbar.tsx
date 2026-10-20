@@ -42,6 +42,12 @@ export const Navbar: React.FC = () => {
 
   const occupiedCount = tables.filter((t) => t.status === 'OCCUPIED' || t.status === 'BILL_PRINTED').length;
   const unpaidCount = orders.filter((o) => o.paymentStatus === 'UNPAID').length;
+  const activeOrdersCount = orders.filter((o) =>
+    o.paymentStatus === 'UNPAID' ||
+    o.status === 'PREPARING' ||
+    o.takeawayStatus === 'PREPARING' ||
+    o.takeawayStatus === 'READY_FOR_PICKUP'
+  ).length;
   const kitchenCount = orders.filter((o) =>
     o.items.some((i) => i.kitchenStatus === 'SENT_TO_KITCHEN' || i.kitchenStatus === 'PREPARING')
   ).length;
@@ -89,7 +95,11 @@ export const Navbar: React.FC = () => {
         >
           <ClipboardList size={18} />
           <span>Active Tabs</span>
-          {unpaidCount > 0 && <span className="nav-badge unpaid">{unpaidCount} Open</span>}
+          {activeOrdersCount > 0 && (
+            <span className="nav-badge unpaid">
+              {unpaidCount > 0 ? `${unpaidCount} Open` : `${activeOrdersCount} Prep`}
+            </span>
+          )}
         </button>
 
         <button

@@ -20,7 +20,7 @@ import type { RestaurantTable } from './types/pos';
 import './index.css';
 
 const POSMain: React.FC = () => {
-  const { currentMode, printGuestCheck } = usePOS();
+  const { currentMode, printGuestCheck, setActiveOrder } = usePOS();
 
   // Modal states
   const [openTableTarget, setOpenTableTarget] = useState<RestaurantTable | null>(null);
@@ -126,9 +126,12 @@ const POSMain: React.FC = () => {
       {paymentOrderId && (
         <PaymentModal
           orderId={paymentOrderId}
-          onClose={() => setPaymentOrderId(null)}
+          onClose={() => {
+            setPaymentOrderId(null);
+            setActiveOrder(null);
+          }}
           onPaymentSuccess={() => {
-            showToast('✅ Payment settled successfully!');
+            showToast('✅ Payment settled! KOT active in Kitchen.');
           }}
         />
       )}

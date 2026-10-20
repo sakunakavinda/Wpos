@@ -37,7 +37,8 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
     setOrderType,
     setOrderCustomer,
     clearActiveCart,
-    parkActiveOrder
+    parkActiveOrder,
+    sendDraftsToKitchen
   } = usePOS();
 
   const [editingNoteItemId, setEditingNoteItemId] = useState<string | null>(null);
@@ -68,6 +69,15 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
     if (newlySent.length > 0) {
       onKOTModal(newlySent);
     }
+  };
+
+  const handlePayNow = () => {
+    if (!activeOrder) return;
+    const newlySent = sendDraftsToKitchen();
+    if (newlySent.length > 0) {
+      onKOTModal(newlySent);
+    }
+    onPaymentModal(activeOrder.id);
   };
 
   const handleSaveCustomerInfo = () => {
@@ -333,7 +343,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
         {/* 2. Pay Now button: instant checkout */}
         <button
           className="footer-btn pay-btn"
-          onClick={() => activeOrder && onPaymentModal(activeOrder.id)}
+          onClick={handlePayNow}
           disabled={items.length === 0}
           id="btn-pay-now"
         >

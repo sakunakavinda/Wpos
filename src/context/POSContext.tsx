@@ -10,7 +10,8 @@ import type {
   ShiftSession,
   TableSection,
   PaymentMethod,
-  PaymentRecord
+  PaymentRecord,
+  OrderStatus
 } from '../types/pos';
 import {
   INITIAL_TABLES,
@@ -53,6 +54,7 @@ interface POSContextType {
     payOnPickup?: boolean
   ) => Order;
   markTakeawayReady: (orderId: string) => void;
+  markTakeawayCollected: (orderId: string) => void;
   updateTakeawayDetails: (orderId: string, details: Partial<Order>) => void;
   addItemToActiveOrder: (product: Product, notes?: string) => void;
   updateItemQuantity: (itemId: string, delta: number) => void;
@@ -309,7 +311,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ? {
               ...o,
               takeawayStatus: 'READY_FOR_PICKUP',
-              status: 'SERVED'
+              status: o.paymentStatus === 'PAID' ? 'SERVED' : 'SERVED',
+              items: o.items.map((i) => ({ ...i, kitchenStatus: 'SERVED' as const }))
+            }
+          : o
+      )
+    );
+  };
+
+  const markTakeawayCollected = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? {
+              ...o,
+              takeawayStatus: 'COLLECTED',
+              status: 'COMPLETED',
+              closedAt: new Date().toISOString()
             }
           : o
       )
@@ -483,12 +501,30 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: new Date().toISOString()
     };
 
+    const now = new Date().toISOString();
+    // Auto-send any draft items to kitchen so KOT is always sent!
+    const updatedItems = targetOrder.items.map((item) =>
+      item.kitchenStatus === 'DRAFT'
+        ? {
+            ...item,
+            kitchenStatus: 'SENT_TO_KITCHEN' as const,
+            sentAt: now
+          }
+        : item
+    );
+
+    const allServed = updatedItems.length > 0 && updatedItems.every((i) => i.kitchenStatus === 'SERVED');
+    const newStatus: OrderStatus = allServed ? 'COMPLETED' : 'PREPARING';
+
     const updatedOrder: Order = {
       ...targetOrder,
+      items: updatedItems,
       tipAmount: tip,
       paymentStatus: 'PAID',
-      status: 'COMPLETED',
-      closedAt: new Date().toISOString()
+      status: newStatus,
+      takeawayStatus: targetOrder.type === 'TAKEAWAY' ? (allServed ? 'READY_FOR_PICKUP' : 'PREPARING') : undefined,
+      payOnPickup: false,
+      closedAt: allServed ? now : undefined
     };
 
     // Update orders list
@@ -497,8 +533,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Record payment
     setPaymentHistory((prev) => [payment, ...prev]);
 
-    // Free table if dine-in
-    if (targetOrder.tableId) {
+    // Free table if dine-in AND all food was already served
+    if (targetOrder.tableId && allServed) {
       setTables((prev) =>
         prev.map((t) =>
           t.id === targetOrder.tableId
@@ -689,12 +725,38 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders((prev) =>
       prev.map((order) => {
         if (order.id !== orderId) return order;
+        const isPaid = order.paymentStatus === 'PAID';
+        const isDineIn = order.type === 'DINE_IN';
+        const isTakeaway = order.type === 'TAKEAWAY';
+        const newStatus: OrderStatus = (isDineIn && isPaid) ? 'COMPLETED' : 'SERVED';
+
         return {
           ...order,
-          status: 'SERVED',
-          takeawayStatus: order.type === 'TAKEAWAY' ? 'READY_FOR_PICKUP' : order.takeawayStatus,
+          status: newStatus,
+          takeawayStatus: isTakeaway ? 'READY_FOR_PICKUP' : order.takeawayStatus,
+          closedAt: (isDineIn && isPaid) ? new Date().toISOString() : order.closedAt,
           items: order.items.map((i) => ({ ...i, kitchenStatus: 'SERVED' as const }))
         };
+      })
+    );
+
+    // If dine in and already paid, free table
+    setTables((prev) =>
+      prev.map((tbl) => {
+        if (tbl.activeOrderId === orderId) {
+          const ord = orders.find((o) => o.id === orderId);
+          if (ord && ord.paymentStatus === 'PAID') {
+            return {
+              ...tbl,
+              status: 'AVAILABLE',
+              activeOrderId: undefined,
+              seatedAt: undefined,
+              guestCount: undefined,
+              serverName: undefined
+            };
+          }
+        }
+        return tbl;
       })
     );
   };
@@ -748,6 +810,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         startQuickSale,
         startTakeawayOrder,
         markTakeawayReady,
+        markTakeawayCollected,
         updateTakeawayDetails,
         addItemToActiveOrder,
         updateItemQuantity,
