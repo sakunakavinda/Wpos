@@ -80,13 +80,7 @@ const POSMain: React.FC = () => {
       <div className="pos-main-body">
         {/* Left / Center View Area */}
         <main className="pos-view-workspace">
-          {/* Always display Takeaway Queue in Register or Orders view */}
-          {(currentMode === 'REGISTER' || currentMode === 'ORDERS') && (
-            <TakeawayQueueBar
-              onNewTakeaway={() => setIsTakeawayModalOpen(true)}
-              onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
-            />
-          )}
+          {currentMode === 'REGISTER' && <RegisterView />}
 
           {currentMode === 'TABLES' && (
             <TableView
@@ -97,15 +91,17 @@ const POSMain: React.FC = () => {
             />
           )}
 
-          {currentMode === 'REGISTER' && (
-            <RegisterView onNewTakeawayModal={() => setIsTakeawayModalOpen(true)} />
-          )}
-
           {currentMode === 'ORDERS' && (
-            <ActiveOrdersView
-              onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
-              onPrintGuestCheck={handlePrintGuestCheck}
-            />
+            <>
+              <TakeawayQueueBar
+                onNewTakeaway={() => setIsTakeawayModalOpen(true)}
+                onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
+              />
+              <ActiveOrdersView
+                onPaymentModal={(orderId) => setPaymentOrderId(orderId)}
+                onPrintGuestCheck={handlePrintGuestCheck}
+              />
+            </>
           )}
 
           {currentMode === 'ANALYTICS' && <ShiftView />}

@@ -5,6 +5,7 @@ import type {
   Category,
   Order,
   OrderItem,
+  OrderType,
   ShiftSession,
   TableSection,
   PaymentMethod,
@@ -69,6 +70,10 @@ interface POSContextType {
   transferTable: (fromTableId: string, toTableId: string) => boolean;
   setOrderDiscount: (discountPercent: number) => void;
   setOrderTip: (tip: number) => void;
+  setOrderType: (type: OrderType, tableId?: string, tableName?: string) => void;
+  setOrderCustomer: (customerName?: string, token?: string) => void;
+  clearActiveCart: () => void;
+  parkActiveOrder: () => OrderItem[];
   closeActiveOrderDrawer: () => void;
   closeShiftSession: (countedCash: number) => void;
   resetAllData: () => void;
@@ -104,7 +109,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
-  const [currentMode, setCurrentMode] = useState<AppMode>('TABLES');
+  const [currentMode, setCurrentMode] = useState<AppMode>('REGISTER');
   const [selectedSection, setSelectedSection] = useState<TableSection | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('cat-all');
@@ -549,6 +554,65 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveOrder(updatedOrder);
   };
 
+  const setOrderType = (type: OrderType, tableId?: string, tableName?: string) => {
+    if (!activeOrder) return;
+    const updatedOrder: Order = {
+      ...activeOrder,
+      type,
+      tableId,
+      tableName: type === 'DINE_IN' ? tableName || 'Dine-In Table' : undefined,
+      payOnPickup: type === 'TAKEAWAY' ? true : false
+    };
+
+    if (type === 'DINE_IN' && tableId) {
+      setTables((prev) =>
+        prev.map((t) =>
+          t.id === tableId
+            ? { ...t, status: 'OCCUPIED', activeOrderId: updatedOrder.id, seatedAt: new Date().toISOString() }
+            : t
+        )
+      );
+    }
+
+    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    setActiveOrder(updatedOrder);
+  };
+
+  const setOrderCustomer = (customerName?: string, token?: string) => {
+    if (!activeOrder) return;
+    const updatedOrder: Order = {
+      ...activeOrder,
+      customerName: customerName || activeOrder.customerName,
+      pickupToken: token !== undefined ? token : activeOrder.pickupToken
+    };
+    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    setActiveOrder(updatedOrder);
+  };
+
+  const clearActiveCart = () => {
+    if (!activeOrder) return;
+    // If order has no items sent to kitchen yet, delete it completely
+    const hasSentItems = activeOrder.items.some((i) => i.kitchenStatus !== 'DRAFT');
+    if (!hasSentItems) {
+      setOrders((prev) => prev.filter((o) => o.id !== activeOrder.id));
+      if (activeOrder.tableId) {
+        setTables((prev) =>
+          prev.map((t) => (t.id === activeOrder.tableId ? { ...t, status: 'AVAILABLE', activeOrderId: undefined } : t))
+        );
+      }
+    }
+    setActiveOrder(null);
+  };
+
+  const parkActiveOrder = (): OrderItem[] => {
+    if (!activeOrder) return [];
+    // Send all draft items to kitchen
+    const sent = sendDraftsToKitchen();
+    // Clear active drawer so next order is ready immediately!
+    setActiveOrder(null);
+    return sent;
+  };
+
   const closeActiveOrderDrawer = () => {
     setActiveOrder(null);
   };
@@ -608,6 +672,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         transferTable,
         setOrderDiscount,
         setOrderTip,
+        setOrderType,
+        setOrderCustomer,
+        clearActiveCart,
+        parkActiveOrder,
         closeActiveOrderDrawer,
         closeShiftSession,
         resetAllData

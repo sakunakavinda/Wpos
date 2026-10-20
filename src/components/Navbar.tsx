@@ -59,6 +59,15 @@ export const Navbar: React.FC = () => {
       {/* Navigation Modes */}
       <nav className="navbar-nav">
         <button
+          className={`nav-tab-btn ${currentMode === 'REGISTER' ? 'active' : ''}`}
+          onClick={() => setCurrentMode('REGISTER')}
+          id="nav-register-btn"
+        >
+          <CreditCard size={18} />
+          <span>Register</span>
+        </button>
+
+        <button
           className={`nav-tab-btn ${currentMode === 'TABLES' ? 'active' : ''}`}
           onClick={() => setCurrentMode('TABLES')}
           id="nav-tables-btn"
@@ -66,15 +75,6 @@ export const Navbar: React.FC = () => {
           <LayoutGrid size={18} />
           <span>Floor Map</span>
           {occupiedCount > 0 && <span className="nav-badge occupied">{occupiedCount} Busy</span>}
-        </button>
-
-        <button
-          className={`nav-tab-btn ${currentMode === 'REGISTER' ? 'active' : ''}`}
-          onClick={() => setCurrentMode('REGISTER')}
-          id="nav-register-btn"
-        >
-          <CreditCard size={18} />
-          <span>Quick Register</span>
         </button>
 
         <button

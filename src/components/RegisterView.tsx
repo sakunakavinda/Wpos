@@ -11,15 +11,10 @@ import {
   Grid,
   Barcode,
   Plus,
-  Check,
-  ShoppingBag
+  Check
 } from 'lucide-react';
 
-interface RegisterViewProps {
-  onNewTakeawayModal?: () => void;
-}
-
-export const RegisterView: React.FC<RegisterViewProps> = ({ onNewTakeawayModal }) => {
+export const RegisterView: React.FC = () => {
   const {
     products,
     categories,
@@ -112,34 +107,20 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onNewTakeawayModal }
           ))}
         </div>
 
-        <div className="register-actions-right">
-          {onNewTakeawayModal && (
-            <button
-              type="button"
-              className="btn-new-takeaway-reg"
-              onClick={onNewTakeawayModal}
-              id="btn-reg-new-takeaway"
-            >
-              <ShoppingBag size={15} />
-              <span>+ Takeaway / Pickup</span>
-            </button>
-          )}
-
-          {/* Barcode scanner simulator */}
-          <form className="barcode-simulator-bar" onSubmit={handleBarcodeSubmit}>
-            <Barcode size={18} className="barcode-icon" />
-            <input
-              type="text"
-              placeholder="Scan Barcode / SKU..."
-              value={barcodeInput}
-              onChange={(e) => setBarcodeInput(e.target.value)}
-              className="barcode-input"
-            />
-            <button type="submit" className="barcode-submit-btn">
-              Scan
-            </button>
-          </form>
-        </div>
+        {/* Barcode scanner simulator */}
+        <form className="barcode-simulator-bar" onSubmit={handleBarcodeSubmit}>
+          <Barcode size={18} className="barcode-icon" />
+          <input
+            type="text"
+            placeholder="Scan Barcode / SKU..."
+            value={barcodeInput}
+            onChange={(e) => setBarcodeInput(e.target.value)}
+            className="barcode-input"
+          />
+          <button type="submit" className="barcode-submit-btn">
+            Scan
+          </button>
+        </form>
       </div>
 
       {/* Barcode feedback alert */}

@@ -988,79 +988,204 @@ input, select, textarea {
 
 /* Active Drawer Content */
 .drawer-header {
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.18);
+  gap: 12px;
+}
+
+.drawer-order-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .order-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .order-number-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 800;
   font-family: var(--font-mono);
+  color: #f1f5f9;
 }
 
-.order-type-badge {
-  font-size: 0.72rem;
-  padding: 2px 7px;
+/* 1-Click Order Type Switch */
+.order-type-switch {
+  display: flex;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.type-switch-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.74rem;
   font-weight: 700;
+  color: var(--text-muted);
 }
 
-.order-type-badge.dine_in {
-  background: rgba(99, 102, 241, 0.2);
-  color: #818cf8;
+.type-switch-btn:hover {
+  color: #fff;
 }
 
-.order-type-badge.takeaway {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
+.type-switch-btn.active {
+  background: var(--brand-primary);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-.order-subtitle {
+.order-subtitle-row {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 0.78rem;
-  color: var(--text-dim);
-  margin-top: 3px;
 }
 
-.table-highlight {
-  color: #e2e8f0;
-  font-weight: 600;
-}
-
-.guest-badge {
+.table-inline-picker {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 6px;
+  width: 100%;
+}
+
+.picker-label {
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 0.74rem;
+}
+
+.table-select-dropdown {
+  flex: 1;
+  background: var(--bg-app);
+  color: #e2e8f0;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.table-select-dropdown:focus {
+  border-color: var(--brand-primary);
+}
+
+.takeaway-inline-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-add-customer-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-dim);
+  font-size: 0.72rem;
   background: rgba(255, 255, 255, 0.05);
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: var(--radius-sm);
 }
 
-.drawer-close-btn {
+.btn-add-customer-tag:hover {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.inline-customer-edit {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.mini-input {
+  background: var(--bg-app);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+  font-size: 0.72rem;
+  color: #fff;
+  flex: 1;
+}
+
+.mini-save-btn {
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.mini-cancel-btn {
   color: var(--text-dim);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  font-size: 0.7rem;
+  padding: 2px 4px;
+}
+
+.drawer-clear-btn {
+  color: var(--text-dim);
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--border-subtle);
 }
 
-.drawer-close-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+.drawer-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.ready-to-add-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 20px;
+  color: var(--text-dim);
+}
+
+.tap-prompt-icon {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+  animation: pulse 2s infinite;
+}
+
+.ready-to-add-placeholder h4 {
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.ready-to-add-placeholder p {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  max-width: 240px;
 }
 
 .draft-alert-banner {

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { usePOS } from '../context/POSContext';
 import {
-  X,
   Plus,
   Minus,
   Trash2,
@@ -9,12 +8,13 @@ import {
   Receipt,
   CreditCard,
   MessageSquare,
-  Users,
-  AlertTriangle,
   Percent,
-  ShoppingBag
+  ShoppingBag,
+  RotateCcw,
+  UtensilsCrossed,
+  Tag
 } from 'lucide-react';
-import type { OrderItem } from '../types/pos';
+import type { OrderItem, OrderType } from '../types/pos';
 
 interface OrderDrawerProps {
   onPaymentModal: (orderId: string) => void;
@@ -29,49 +29,50 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
 }) => {
   const {
     activeOrder,
-    closeActiveOrderDrawer,
+    tables,
     updateItemQuantity,
     removeItemFromOrder,
     updateItemNotes,
-    sendDraftsToKitchen,
     setOrderDiscount,
-    setOrderTip
+    setOrderType,
+    setOrderCustomer,
+    clearActiveCart,
+    parkActiveOrder
   } = usePOS();
 
   const [editingNoteItemId, setEditingNoteItemId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [customerNameInput, setCustomerNameInput] = useState('');
+  const [tokenInput, setTokenInput] = useState('');
 
-  if (!activeOrder) {
-    return (
-      <aside className="order-drawer empty-drawer">
-        <div className="empty-cart-state">
-          <div className="empty-cart-icon">🛒</div>
-          <h3>No Active Order Selected</h3>
-          <p>Select an occupied table from the Floor Map or pick items from the Quick Register to start an order.</p>
-        </div>
-      </aside>
-    );
-  }
-
-  // Calculate pricing
-  const subtotal = activeOrder.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discountAmount = subtotal * (activeOrder.discountPercent / 100);
+  // Calculate pricing if order exists
+  const items = activeOrder?.items || [];
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discountPercent = activeOrder?.discountPercent || 0;
+  const discountAmount = subtotal * (discountPercent / 100);
   const discountedSubtotal = subtotal - discountAmount;
-  const taxAmount = discountedSubtotal * activeOrder.taxRate;
-  const grandTotal = discountedSubtotal + taxAmount + (activeOrder.tipAmount || 0);
+  const taxRate = activeOrder?.taxRate || 0.08;
+  const taxAmount = discountedSubtotal * taxRate;
+  const tipAmount = activeOrder?.tipAmount || 0;
+  const grandTotal = discountedSubtotal + taxAmount + tipAmount;
 
-  // Group items by status
-  const draftItems = activeOrder.items.filter((i) => i.kitchenStatus === 'DRAFT');
-  const activeKitchenItems = activeOrder.items.filter(
+  const draftItems = items.filter((i) => i.kitchenStatus === 'DRAFT');
+  const activeKitchenItems = items.filter(
     (i) => i.kitchenStatus === 'SENT_TO_KITCHEN' || i.kitchenStatus === 'PREPARING'
   );
-  const servedItems = activeOrder.items.filter((i) => i.kitchenStatus === 'SERVED');
+  const servedItems = items.filter((i) => i.kitchenStatus === 'SERVED');
 
-  const handleSendToKitchen = () => {
-    const newlySent = sendDraftsToKitchen();
+  const handleHoldAndPayLater = () => {
+    const newlySent = parkActiveOrder();
     if (newlySent.length > 0) {
       onKOTModal(newlySent);
     }
+  };
+
+  const handleSaveCustomerInfo = () => {
+    setOrderCustomer(customerNameInput.trim() || undefined, tokenInput.trim() || undefined);
+    setIsEditingCustomer(false);
   };
 
   const handleSaveNote = (itemId: string) => {
@@ -80,68 +81,142 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
     setNoteText('');
   };
 
+  const handleTypeChange = (newType: OrderType) => {
+    if (newType === 'DINE_IN') {
+      // Find first available table or default
+      const firstAvail = tables.find((t) => t.status === 'AVAILABLE') || tables[0];
+      setOrderType('DINE_IN', firstAvail.id, `${firstAvail.name} (${firstAvail.number})`);
+    } else {
+      setOrderType('TAKEAWAY');
+    }
+  };
+
   return (
     <aside className="order-drawer active-drawer" id="active-order-drawer">
-      {/* Drawer Header */}
+      {/* Drawer Header: Order ID, Type Switch & Quick Actions */}
       <div className="drawer-header">
         <div className="drawer-order-info">
           <div className="order-title-row">
-            <span className="order-number-title">{activeOrder.orderNumber}</span>
-            <span className={`order-type-badge ${activeOrder.type.toLowerCase()}`}>
-              {activeOrder.type === 'DINE_IN' ? '🍽️ Dine-In' : '🛍️ Takeaway'}
+            <span className="order-number-title">
+              {activeOrder ? activeOrder.orderNumber : 'New Order'}
             </span>
+
+            {/* Simple Order Type Switch */}
+            <div className="order-type-switch">
+              <button
+                type="button"
+                className={`type-switch-btn ${(!activeOrder || activeOrder.type === 'TAKEAWAY') ? 'active' : ''}`}
+                onClick={() => handleTypeChange('TAKEAWAY')}
+              >
+                <ShoppingBag size={13} />
+                <span>Takeaway</span>
+              </button>
+              <button
+                type="button"
+                className={`type-switch-btn ${activeOrder?.type === 'DINE_IN' ? 'active' : ''}`}
+                onClick={() => handleTypeChange('DINE_IN')}
+              >
+                <UtensilsCrossed size={13} />
+                <span>Dine-In</span>
+              </button>
+            </div>
           </div>
 
-          <div className="order-subtitle">
-            {activeOrder.tableName ? (
-              <span className="table-highlight">{activeOrder.tableName}</span>
+          {/* Table / Customer inline row */}
+          <div className="order-subtitle-row">
+            {activeOrder?.type === 'DINE_IN' ? (
+              <div className="table-inline-picker">
+                <span className="picker-label">Table:</span>
+                <select
+                  value={activeOrder.tableId || ''}
+                  onChange={(e) => {
+                    const tbl = tables.find((t) => t.id === e.target.value);
+                    if (tbl) {
+                      setOrderType('DINE_IN', tbl.id, `${tbl.name} (${tbl.number})`);
+                    }
+                  }}
+                  className="table-select-dropdown"
+                >
+                  {tables.map((tbl) => (
+                    <option key={tbl.id} value={tbl.id}>
+                      {tbl.number} - {tbl.name} ({tbl.capacity}p) {tbl.status !== 'AVAILABLE' && tbl.id !== activeOrder.tableId ? '• Busy' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
             ) : (
-              <div className="takeaway-client-info">
-                <span className="client-name">{activeOrder.customerName || 'Takeaway Customer'}</span>
-                {activeOrder.pickupToken && (
+              <div className="takeaway-inline-info">
+                {activeOrder?.customerName && (
+                  <span className="client-name">{activeOrder.customerName}</span>
+                )}
+                {activeOrder?.pickupToken && (
                   <span className="token-chip">{activeOrder.pickupToken}</span>
                 )}
-                {activeOrder.customerPhone && (
-                  <span className="phone-chip">{activeOrder.customerPhone}</span>
+                {!isEditingCustomer && (
+                  <button
+                    type="button"
+                    className="btn-add-customer-tag"
+                    onClick={() => {
+                      setCustomerNameInput(activeOrder?.customerName || '');
+                      setTokenInput(activeOrder?.pickupToken || '');
+                      setIsEditingCustomer(true);
+                    }}
+                  >
+                    <Tag size={11} />
+                    <span>{activeOrder?.customerName ? 'Edit Tag' : '+ Name / Buzzer #'}</span>
+                  </button>
                 )}
               </div>
             )}
-            {activeOrder.guestCount && (
-              <span className="guest-badge">
-                <Users size={12} /> {activeOrder.guestCount} Guests
-              </span>
-            )}
           </div>
+
+          {/* Optional inline tag edit popup */}
+          {isEditingCustomer && (
+            <div className="inline-customer-edit">
+              <input
+                type="text"
+                placeholder="Name (e.g. John)"
+                value={customerNameInput}
+                onChange={(e) => setCustomerNameInput(e.target.value)}
+                className="mini-input"
+                autoFocus
+              />
+              <input
+                type="text"
+                placeholder="Buzzer / Token #"
+                value={tokenInput}
+                onChange={(e) => setTokenInput(e.target.value)}
+                className="mini-input"
+              />
+              <button type="button" className="mini-save-btn" onClick={handleSaveCustomerInfo}>
+                Save
+              </button>
+              <button type="button" className="mini-cancel-btn" onClick={() => setIsEditingCustomer(false)}>
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
-        <button
-          className="drawer-close-btn"
-          onClick={closeActiveOrderDrawer}
-          title="Minimize Cart"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      {/* Warning banner if unsent draft items exist */}
-      {draftItems.length > 0 && activeOrder.type === 'DINE_IN' && (
-        <div className="draft-alert-banner">
-          <div className="draft-alert-text">
-            <AlertTriangle size={15} />
-            <span>{draftItems.length} new item(s) not yet sent to kitchen</span>
-          </div>
-          <button className="fire-kitchen-btn-mini" onClick={handleSendToKitchen}>
-            <Flame size={14} /> Send KOT
+        {/* Clear Cart Button */}
+        {activeOrder && items.length > 0 && (
+          <button
+            className="drawer-clear-btn"
+            onClick={clearActiveCart}
+            title="Clear and Start Fresh"
+          >
+            <RotateCcw size={15} />
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Items Scrollable List */}
       <div className="drawer-items-list">
-        {activeOrder.items.length === 0 ? (
-          <div className="no-items-placeholder">
-            <span>Ticket is currently empty.</span>
-            <span className="subtext">Tap any food or drink to add to this order.</span>
+        {items.length === 0 ? (
+          <div className="ready-to-add-placeholder">
+            <div className="tap-prompt-icon">👆</div>
+            <h4>Ticket Ready</h4>
+            <p>Tap any food or drink item on the menu to add it immediately to this order.</p>
           </div>
         ) : (
           <>
@@ -150,8 +225,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
               <div className="item-group-section draft-group">
                 <div className="group-header">
                   <span className="dot dot-amber" />
-                  <span>Draft Items (Pending Kitchen Send)</span>
-                  <span className="group-count">{draftItems.length}</span>
+                  <span>New Items ({draftItems.length})</span>
                 </div>
                 {draftItems.map((item) => renderItemRow(item, true))}
               </div>
@@ -162,8 +236,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
               <div className="item-group-section kitchen-group">
                 <div className="group-header">
                   <span className="dot dot-purple" />
-                  <span>In Kitchen / Preparing</span>
-                  <span className="group-count">{activeKitchenItems.length}</span>
+                  <span>Cooking / Sent ({activeKitchenItems.length})</span>
                 </div>
                 {activeKitchenItems.map((item) => renderItemRow(item, false))}
               </div>
@@ -174,8 +247,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
               <div className="item-group-section served-group">
                 <div className="group-header">
                   <span className="dot dot-green" />
-                  <span>Served to Table</span>
-                  <span className="group-count">{servedItems.length}</span>
+                  <span>Served / Ready ({servedItems.length})</span>
                 </div>
                 {servedItems.map((item) => renderItemRow(item, false))}
               </div>
@@ -184,120 +256,85 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
         )}
       </div>
 
-      {/* Discount & Tip Selectors */}
-      <div className="drawer-adjustments">
-        <div className="adjustment-row">
-          <span className="adj-label">
-            <Percent size={13} /> Discount:
-          </span>
-          <div className="pill-selector">
-            {[0, 5, 10, 15, 20].map((disc) => (
-              <button
-                key={disc}
-                className={`adj-pill ${activeOrder.discountPercent === disc ? 'active' : ''}`}
-                onClick={() => setOrderDiscount(disc)}
-              >
-                {disc === 0 ? 'None' : `${disc}%`}
-              </button>
-            ))}
+      {/* Simple Quick Adjustments (Only visible when items exist) */}
+      {items.length > 0 && (
+        <div className="drawer-adjustments">
+          <div className="adjustment-row">
+            <span className="adj-label">
+              <Percent size={13} /> Discount:
+            </span>
+            <div className="pill-selector">
+              {[0, 5, 10, 15, 20].map((disc) => (
+                <button
+                  key={disc}
+                  className={`adj-pill ${discountPercent === disc ? 'active' : ''}`}
+                  onClick={() => setOrderDiscount(disc)}
+                >
+                  {disc === 0 ? 'None' : `${disc}%`}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="adjustment-row">
-          <span className="adj-label">Tip / Gratuity:</span>
-          <div className="pill-selector">
-            {[
-              { label: '0%', val: 0 },
-              { label: '10%', val: Number((discountedSubtotal * 0.1).toFixed(2)) },
-              { label: '15%', val: Number((discountedSubtotal * 0.15).toFixed(2)) },
-              { label: '20%', val: Number((discountedSubtotal * 0.2).toFixed(2)) }
-            ].map((tipOpt) => (
-              <button
-                key={tipOpt.label}
-                className={`adj-pill ${activeOrder.tipAmount === tipOpt.val ? 'active' : ''}`}
-                onClick={() => setOrderTip(tipOpt.val)}
-              >
-                {tipOpt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Order Pricing Summary */}
+      {/* Pricing Summary */}
       <div className="drawer-summary">
         <div className="summary-line">
           <span>Subtotal</span>
           <span>${subtotal.toFixed(2)}</span>
         </div>
-        {activeOrder.discountPercent > 0 && (
+        {discountPercent > 0 && (
           <div className="summary-line discount-line">
-            <span>Discount ({activeOrder.discountPercent}%)</span>
+            <span>Discount ({discountPercent}%)</span>
             <span>-${discountAmount.toFixed(2)}</span>
           </div>
         )}
         <div className="summary-line">
-          <span>Sales Tax (8%)</span>
+          <span>Tax (8%)</span>
           <span>${taxAmount.toFixed(2)}</span>
         </div>
-        {activeOrder.tipAmount > 0 && (
-          <div className="summary-line tip-line">
-            <span>Gratuity / Tip</span>
-            <span>+${activeOrder.tipAmount.toFixed(2)}</span>
-          </div>
-        )}
         <div className="summary-line grand-total-line">
-          <span>TOTAL DUE</span>
+          <span>TOTAL</span>
           <span className="grand-total-val">${grandTotal.toFixed(2)}</span>
         </div>
       </div>
 
-      {/* Bottom Actions Bar */}
+      {/* Bottom Actions Bar: Primary actions */}
       <div className="drawer-footer-actions">
-        {draftItems.length > 0 && (
+        {activeOrder?.type === 'DINE_IN' && items.length > 0 && (
           <button
-            className="footer-btn send-kot-btn"
-            onClick={handleSendToKitchen}
-            id="btn-send-kot"
-          >
-            <Flame size={17} />
-            <span>Send to Kitchen ({draftItems.length})</span>
-          </button>
-        )}
-
-        {activeOrder.type === 'DINE_IN' && (
-          <button
-            className="footer-btn guest-check-btn"
+            type="button"
+            className="footer-btn guest-check-btn-compact"
             onClick={() => onPrintGuestCheck(activeOrder.id)}
-            id="btn-guest-check"
+            title="Print Guest Check"
           >
-            <Receipt size={17} />
-            <span>Guest Check</span>
+            <Receipt size={16} />
+            <span>Check</span>
           </button>
         )}
 
-        {activeOrder.type === 'TAKEAWAY' && (
-          <button
-            className="footer-btn hold-pickup-btn"
-            onClick={() => {
-              if (draftItems.length > 0) {
-                handleSendToKitchen();
-              }
-              closeActiveOrderDrawer();
-            }}
-            disabled={activeOrder.items.length === 0}
-            title="Fire to kitchen & park until customer arrives to pick up and pay"
-            id="btn-hold-pickup"
-          >
-            <ShoppingBag size={17} />
-            <span>Park / Pay on Pickup</span>
-          </button>
-        )}
+        {/* 1. Pay Later / Hold button: sends to kitchen and clears screen for next customer */}
+        <button
+          className="footer-btn hold-pickup-btn"
+          onClick={handleHoldAndPayLater}
+          disabled={items.length === 0}
+          title={
+            activeOrder?.type === 'DINE_IN'
+              ? 'Send items to kitchen & keep table open for post-dine payment'
+              : 'Send items to kitchen & park in pickup queue for payment upon collection'
+          }
+          id="btn-hold-pay-later"
+        >
+          <Flame size={17} />
+          <span>Send / Pay Later</span>
+        </button>
 
+        {/* 2. Pay Now button: instant checkout */}
         <button
           className="footer-btn pay-btn"
-          onClick={() => onPaymentModal(activeOrder.id)}
-          disabled={activeOrder.items.length === 0}
+          onClick={() => activeOrder && onPaymentModal(activeOrder.id)}
+          disabled={items.length === 0}
           id="btn-pay-now"
         >
           <CreditCard size={17} />
@@ -377,7 +414,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
                 setNoteText('');
               }}
             >
-              + Kitchen note / instructions
+              + Kitchen note
             </button>
           )}
 
@@ -385,7 +422,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
             <div className="note-input-row">
               <input
                 type="text"
-                placeholder="e.g. Medium Rare, No Onions, Extra Sauce..."
+                placeholder="e.g. Medium Rare, No Onions..."
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
                 autoFocus
