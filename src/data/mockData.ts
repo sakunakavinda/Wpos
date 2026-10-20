@@ -1,0 +1,576 @@
+import type { RestaurantTable, Category, Product, Order, ShiftSession } from '../types/pos';
+
+export const INITIAL_CATEGORIES: Category[] = [
+  { id: 'cat-all', name: 'All Items', icon: 'Grid' },
+  { id: 'cat-starters', name: 'Starters & Bites', icon: 'Utensils' },
+  { id: 'cat-mains', name: 'Mains & Steaks', icon: 'Flame' },
+  { id: 'cat-pizza', name: 'Pizza & Pasta', icon: 'Pizza' },
+  { id: 'cat-burgers', name: 'Burgers & Sides', icon: 'Sandwich' },
+  { id: 'cat-desserts', name: 'Sweet Desserts', icon: 'Cake' },
+  { id: 'cat-cocktails', name: 'Cocktails & Wine', icon: 'Wine' },
+  { id: 'cat-coffee', name: 'Coffee & Drinks', icon: 'Coffee' },
+];
+
+export const INITIAL_PRODUCTS: Product[] = [
+  {
+    id: 'prod-1',
+    name: 'Truffle Parmesan Fries',
+    categoryId: 'cat-starters',
+    price: 11.50,
+    costPrice: 3.20,
+    sku: 'APP-001',
+    barcode: '890100101',
+    image: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 45,
+    description: 'Crispy hand-cut potatoes tossed in black truffle oil and 24-month aged parmesan.'
+  },
+  {
+    id: 'prod-2',
+    name: 'Burrata Caprese Salad',
+    categoryId: 'cat-starters',
+    price: 14.00,
+    costPrice: 4.80,
+    sku: 'APP-002',
+    barcode: '890100102',
+    image: 'https://images.unsplash.com/photo-1592417817098-8f3d6910985b?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 22,
+    description: 'Fresh Pugliese burrata, heirloom tomatoes, fresh basil and balsamic reduction glaze.'
+  },
+  {
+    id: 'prod-3',
+    name: 'Crispy Calamari Fritti',
+    categoryId: 'cat-starters',
+    price: 15.50,
+    costPrice: 5.50,
+    sku: 'APP-003',
+    barcode: '890100103',
+    image: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 18,
+    description: 'Lightly battered wild squid with smoked paprika garlic aioli and grilled lemon.'
+  },
+  {
+    id: 'prod-4',
+    name: 'Prime Black Angus Ribeye (12oz)',
+    categoryId: 'cat-mains',
+    price: 38.00,
+    costPrice: 16.00,
+    sku: 'MAIN-001',
+    barcode: '890100201',
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 14,
+    description: 'Dry-aged for 28 days, char-grilled with rosemary garlic herb butter and roasted marrow.'
+  },
+  {
+    id: 'prod-5',
+    name: 'Pan-Seared Scottish Salmon',
+    categoryId: 'cat-mains',
+    price: 29.50,
+    costPrice: 11.20,
+    sku: 'MAIN-002',
+    barcode: '890100202',
+    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 12,
+    description: 'Crispy skin salmon filet with saffron asparagus risotto and dill lemon beurre blanc.'
+  },
+  {
+    id: 'prod-6',
+    name: 'Slow-Braised Lamb Shank',
+    categoryId: 'cat-mains',
+    price: 32.00,
+    costPrice: 12.50,
+    sku: 'MAIN-003',
+    barcode: '890100203',
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 9,
+    description: 'Fall-off-the-bone lamb shank cooked in rich Chianti wine served over silky mashed potatoes.'
+  },
+  {
+    id: 'prod-7',
+    name: 'Neapolitan Margherita D.O.P.',
+    categoryId: 'cat-pizza',
+    price: 18.00,
+    costPrice: 4.10,
+    sku: 'PIZ-001',
+    barcode: '890100301',
+    image: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 35,
+    description: 'San Marzano tomato sauce, fior di latte mozzarella, fresh sweet basil and extra virgin olive oil.'
+  },
+  {
+    id: 'prod-8',
+    name: 'Truffle & Wild Mushroom Pizza',
+    categoryId: 'cat-pizza',
+    price: 22.50,
+    costPrice: 6.20,
+    sku: 'PIZ-002',
+    barcode: '890100302',
+    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 20,
+    description: 'White base with fontina cheese, sautéed porcini and cremini mushrooms, truffle drizzle.'
+  },
+  {
+    id: 'prod-9',
+    name: 'Handmade Tagliatelle Bolognese',
+    categoryId: 'cat-pizza',
+    price: 21.00,
+    costPrice: 5.40,
+    sku: 'PAS-001',
+    barcode: '890100303',
+    image: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281699?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 24,
+    description: 'Fresh egg pasta with traditional slow-cooked beef and veal ragù with Grana Padano.'
+  },
+  {
+    id: 'prod-10',
+    name: 'Wagyu Smash Burger & Truffle Bacon',
+    categoryId: 'cat-burgers',
+    price: 19.50,
+    costPrice: 6.80,
+    sku: 'BRG-001',
+    barcode: '890100401',
+    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 28,
+    description: 'Double Wagyu beef smash patties, applewood bacon, melted cheddar, house sauce in brioche.'
+  },
+  {
+    id: 'prod-11',
+    name: 'Nashville Hot Crispy Chicken',
+    categoryId: 'cat-burgers',
+    price: 17.50,
+    costPrice: 5.00,
+    sku: 'BRG-002',
+    barcode: '890100402',
+    image: 'https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 25,
+    description: 'Buttermilk fried chicken tossed in hot spice glaze with crunchy dill slaw and spicy pickles.'
+  },
+  {
+    id: 'prod-12',
+    name: 'Classic Venetian Tiramisù',
+    categoryId: 'cat-desserts',
+    price: 9.50,
+    costPrice: 2.80,
+    sku: 'DES-001',
+    barcode: '890100501',
+    image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 16,
+    description: 'Savoiardi ladyfingers soaked in dark espresso, layered with silky mascarpone and Valrhona cocoa.'
+  },
+  {
+    id: 'prod-13',
+    name: 'Warm Belgian Chocolate Lava Cake',
+    categoryId: 'cat-desserts',
+    price: 11.00,
+    costPrice: 3.10,
+    sku: 'DES-002',
+    barcode: '890100502',
+    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 14,
+    description: 'Molten chocolate center cake served with Madagascar vanilla bean gelato and strawberry coulis.'
+  },
+  {
+    id: 'prod-14',
+    name: 'Smoked Old Fashioned',
+    categoryId: 'cat-cocktails',
+    price: 16.00,
+    costPrice: 3.50,
+    sku: 'BAR-001',
+    barcode: '890100601',
+    image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 50,
+    description: 'Small batch bourbon, demerara syrup, Angostura bitters, smoked table-side with oak wood.'
+  },
+  {
+    id: 'prod-15',
+    name: 'Espresso Martini',
+    categoryId: 'cat-cocktails',
+    price: 15.00,
+    costPrice: 3.20,
+    sku: 'BAR-002',
+    barcode: '890100602',
+    image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 40,
+    description: 'Ketel One vodka, Kahlúa coffee liqueur, fresh pulled espresso and chocolate dust.'
+  },
+  {
+    id: 'prod-16',
+    name: 'Sparkling Aperol Spritz',
+    categoryId: 'cat-cocktails',
+    price: 13.50,
+    costPrice: 2.90,
+    sku: 'BAR-003',
+    barcode: '890100603',
+    image: 'https://images.unsplash.com/photo-1560512823-829485b8bf24?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 60,
+    description: 'Aperol, organic Prosecco D.O.C., splash of soda water and fresh orange slice.'
+  },
+  {
+    id: 'prod-17',
+    name: 'Double Flat White',
+    categoryId: 'cat-coffee',
+    price: 4.80,
+    costPrice: 0.90,
+    sku: 'COF-001',
+    barcode: '890100701',
+    image: 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 100,
+    description: 'Double ristretto shot with microfoam textured whole milk.'
+  },
+  {
+    id: 'prod-18',
+    name: 'Cold Brew Coffee with Vanilla Sweet Cream',
+    categoryId: 'cat-coffee',
+    price: 5.50,
+    costPrice: 1.10,
+    sku: 'COF-002',
+    barcode: '890100702',
+    image: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=600&q=80',
+    inStock: true,
+    stockCount: 80,
+    description: '18-hour cold steeped single-origin Ethiopian beans topped with cascading vanilla sweet cream.'
+  }
+];
+
+export const INITIAL_TABLES: RestaurantTable[] = [
+  {
+    id: 'tbl-1',
+    number: 'T-01',
+    name: 'Window Booth 1',
+    section: 'Main Floor',
+    capacity: 4,
+    status: 'OCCUPIED',
+    activeOrderId: 'ord-101',
+    seatedAt: new Date(Date.now() - 35 * 60000).toISOString(),
+    guestCount: 3,
+    serverName: 'Sarah Jenkins'
+  },
+  {
+    id: 'tbl-2',
+    number: 'T-02',
+    name: 'Central Table 2',
+    section: 'Main Floor',
+    capacity: 2,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'tbl-3',
+    number: 'T-03',
+    name: 'Family Booth 3',
+    section: 'Main Floor',
+    capacity: 4,
+    status: 'BILL_PRINTED',
+    activeOrderId: 'ord-102',
+    seatedAt: new Date(Date.now() - 65 * 60000).toISOString(),
+    guestCount: 4,
+    serverName: 'Sarah Jenkins'
+  },
+  {
+    id: 'tbl-4',
+    number: 'T-04',
+    name: 'Corner Table 4',
+    section: 'Main Floor',
+    capacity: 6,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'tbl-5',
+    number: 'P-01',
+    name: 'Garden Terrace 1',
+    section: 'Patio Garden',
+    capacity: 4,
+    status: 'OCCUPIED',
+    activeOrderId: 'ord-103',
+    seatedAt: new Date(Date.now() - 20 * 60000).toISOString(),
+    guestCount: 2,
+    serverName: 'Liam Chen'
+  },
+  {
+    id: 'tbl-6',
+    number: 'P-02',
+    name: 'Pergola Table 2',
+    section: 'Patio Garden',
+    capacity: 2,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'tbl-7',
+    number: 'P-03',
+    name: 'Garden Lounge 3',
+    section: 'Patio Garden',
+    capacity: 6,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'tbl-8',
+    number: 'BAR-1',
+    name: 'Bar High-Top 1',
+    section: 'Bar Counter',
+    capacity: 2,
+    status: 'OCCUPIED',
+    activeOrderId: 'ord-104',
+    seatedAt: new Date(Date.now() - 15 * 60000).toISOString(),
+    guestCount: 2,
+    serverName: 'Marcus Vance'
+  },
+  {
+    id: 'tbl-9',
+    number: 'BAR-2',
+    name: 'Bar Counter 2',
+    section: 'Bar Counter',
+    capacity: 2,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'tbl-10',
+    number: 'BAR-3',
+    name: 'Bar Counter 3',
+    section: 'Bar Counter',
+    capacity: 2,
+    status: 'AVAILABLE'
+  },
+  {
+    id: 'tbl-11',
+    number: 'VIP-1',
+    name: 'Wine Cellar Room',
+    section: 'VIP Lounge',
+    capacity: 8,
+    status: 'RESERVED'
+  },
+  {
+    id: 'tbl-12',
+    number: 'VIP-2',
+    name: 'Executive Suite',
+    section: 'VIP Lounge',
+    capacity: 10,
+    status: 'AVAILABLE'
+  }
+];
+
+export const INITIAL_ORDERS: Order[] = [
+  {
+    id: 'ord-101',
+    orderNumber: '#ORD-101',
+    type: 'DINE_IN',
+    tableId: 'tbl-1',
+    tableName: 'Window Booth 1 (T-01)',
+    customerName: 'Miller Party',
+    guestCount: 3,
+    serverName: 'Sarah Jenkins',
+    status: 'SERVED',
+    paymentStatus: 'UNPAID',
+    discountPercent: 0,
+    tipAmount: 0,
+    taxRate: 0.08,
+    createdAt: new Date(Date.now() - 35 * 60000).toISOString(),
+    notes: 'Near window, celebrating anniversary',
+    items: [
+      {
+        id: 'item-101-1',
+        productId: 'prod-1',
+        name: 'Truffle Parmesan Fries',
+        price: 11.50,
+        quantity: 1,
+        round: 1,
+        kitchenStatus: 'SERVED',
+        sentAt: new Date(Date.now() - 32 * 60000).toISOString()
+      },
+      {
+        id: 'item-101-2',
+        productId: 'prod-2',
+        name: 'Burrata Caprese Salad',
+        price: 14.00,
+        quantity: 1,
+        round: 1,
+        kitchenStatus: 'SERVED',
+        sentAt: new Date(Date.now() - 32 * 60000).toISOString()
+      },
+      {
+        id: 'item-101-3',
+        productId: 'prod-4',
+        name: 'Prime Black Angus Ribeye (12oz)',
+        price: 38.00,
+        quantity: 2,
+        notes: 'One Medium Rare, One Medium',
+        round: 2,
+        kitchenStatus: 'PREPARING',
+        sentAt: new Date(Date.now() - 15 * 60000).toISOString()
+      },
+      {
+        id: 'item-101-4',
+        productId: 'prod-14',
+        name: 'Smoked Old Fashioned',
+        price: 16.00,
+        quantity: 2,
+        round: 1,
+        kitchenStatus: 'SERVED',
+        sentAt: new Date(Date.now() - 30 * 60000).toISOString()
+      }
+    ]
+  },
+  {
+    id: 'ord-102',
+    orderNumber: '#ORD-102',
+    type: 'DINE_IN',
+    tableId: 'tbl-3',
+    tableName: 'Family Booth 3 (T-03)',
+    customerName: 'Dr. Evans',
+    guestCount: 4,
+    serverName: 'Sarah Jenkins',
+    status: 'SERVED',
+    paymentStatus: 'UNPAID',
+    discountPercent: 10,
+    tipAmount: 0,
+    taxRate: 0.08,
+    createdAt: new Date(Date.now() - 65 * 60000).toISOString(),
+    notes: 'Guest check requested by waiter',
+    items: [
+      {
+        id: 'item-102-1',
+        productId: 'prod-7',
+        name: 'Neapolitan Margherita D.O.P.',
+        price: 18.00,
+        quantity: 2,
+        round: 1,
+        kitchenStatus: 'SERVED'
+      },
+      {
+        id: 'item-102-2',
+        productId: 'prod-9',
+        name: 'Handmade Tagliatelle Bolognese',
+        price: 21.00,
+        quantity: 2,
+        round: 1,
+        kitchenStatus: 'SERVED'
+      },
+      {
+        id: 'item-102-3',
+        productId: 'prod-12',
+        name: 'Classic Venetian Tiramisù',
+        price: 9.50,
+        quantity: 3,
+        round: 2,
+        kitchenStatus: 'SERVED'
+      },
+      {
+        id: 'item-102-4',
+        productId: 'prod-16',
+        name: 'Sparkling Aperol Spritz',
+        price: 13.50,
+        quantity: 4,
+        round: 1,
+        kitchenStatus: 'SERVED'
+      }
+    ]
+  },
+  {
+    id: 'ord-103',
+    orderNumber: '#ORD-103',
+    type: 'DINE_IN',
+    tableId: 'tbl-5',
+    tableName: 'Garden Terrace 1 (P-01)',
+    customerName: 'Elena & Mark',
+    guestCount: 2,
+    serverName: 'Liam Chen',
+    status: 'PREPARING',
+    paymentStatus: 'UNPAID',
+    discountPercent: 0,
+    tipAmount: 0,
+    taxRate: 0.08,
+    createdAt: new Date(Date.now() - 20 * 60000).toISOString(),
+    items: [
+      {
+        id: 'item-103-1',
+        productId: 'prod-3',
+        name: 'Crispy Calamari Fritti',
+        price: 15.50,
+        quantity: 1,
+        round: 1,
+        kitchenStatus: 'SERVED'
+      },
+      {
+        id: 'item-103-2',
+        productId: 'prod-5',
+        name: 'Pan-Seared Scottish Salmon',
+        price: 29.50,
+        quantity: 2,
+        round: 2,
+        kitchenStatus: 'PREPARING'
+      },
+      {
+        id: 'item-103-3',
+        productId: 'prod-16',
+        name: 'Sparkling Aperol Spritz',
+        price: 13.50,
+        quantity: 2,
+        round: 1,
+        kitchenStatus: 'SERVED'
+      }
+    ]
+  },
+  {
+    id: 'ord-104',
+    orderNumber: '#ORD-104',
+    type: 'DINE_IN',
+    tableId: 'tbl-8',
+    tableName: 'Bar High-Top 1 (BAR-1)',
+    customerName: 'Bar Tab - Jack',
+    guestCount: 2,
+    serverName: 'Marcus Vance',
+    status: 'SERVED',
+    paymentStatus: 'UNPAID',
+    discountPercent: 0,
+    tipAmount: 0,
+    taxRate: 0.08,
+    createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
+    items: [
+      {
+        id: 'item-104-1',
+        productId: 'prod-10',
+        name: 'Wagyu Smash Burger & Truffle Bacon',
+        price: 19.50,
+        quantity: 2,
+        round: 1,
+        kitchenStatus: 'PREPARING'
+      },
+      {
+        id: 'item-104-2',
+        productId: 'prod-14',
+        name: 'Smoked Old Fashioned',
+        price: 16.00,
+        quantity: 2,
+        round: 1,
+        kitchenStatus: 'SERVED'
+      }
+    ]
+  }
+];
+
+export const INITIAL_SHIFT: ShiftSession = {
+  id: 'shift-today',
+  cashierName: 'Alex Morgan',
+  openedAt: new Date(Date.now() - 4 * 3600000).toISOString(),
+  openingFloat: 250.00,
+  cashSales: 185.00,
+  cardSales: 540.00,
+  qrSales: 95.00,
+  totalRevenue: 820.00,
+  totalOrdersCount: 14,
+  status: 'OPEN'
+};
