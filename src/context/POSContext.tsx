@@ -81,7 +81,7 @@ interface POSContextType {
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
 
-const STORAGE_KEY_PREFIX = 'aura_pos_v1_';
+const STORAGE_KEY_PREFIX = 'aura_pos_v3_clean_';
 
 export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Load initial state with localStorage fallbacks
@@ -627,14 +627,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetAllData = () => {
     setTables(INITIAL_TABLES);
-    setOrders(INITIAL_ORDERS);
+    setOrders([]);
     setShift(INITIAL_SHIFT);
     setPaymentHistory([]);
     setActiveOrder(null);
-    localStorage.removeItem(`${STORAGE_KEY_PREFIX}tables`);
-    localStorage.removeItem(`${STORAGE_KEY_PREFIX}orders`);
-    localStorage.removeItem(`${STORAGE_KEY_PREFIX}shift`);
-    localStorage.removeItem(`${STORAGE_KEY_PREFIX}payments`);
+    try {
+      localStorage.clear();
+    } catch {
+      // ignore
+    }
   };
 
   return (
