@@ -10,7 +10,8 @@ import {
   PlusCircle,
   CheckCircle2,
   AlertCircle,
-  Lock
+  Lock,
+  Bookmark
 } from 'lucide-react';
 
 interface TableViewProps {
@@ -32,7 +33,9 @@ export const TableView: React.FC<TableViewProps> = ({
     selectedSection,
     setSelectedSection,
     searchQuery,
-    selectOrderForTable
+    selectOrderForTable,
+    reserveTable,
+    cancelReservation
   } = usePOS();
 
   const sections: (TableSection | 'All')[] = [
@@ -159,14 +162,26 @@ export const TableView: React.FC<TableViewProps> = ({
                       <CheckCircle2 size={32} />
                     </div>
                     <span className="available-label">Table Ready to Seat</span>
-                    <button
-                      className="btn-seat-table"
-                      onClick={() => onOpenTableModal(table)}
-                      id={`btn-seat-${table.id}`}
-                    >
-                      <PlusCircle size={16} />
-                      <span>Seat & Open Tab</span>
-                    </button>
+                    <div className="available-btn-group">
+                      <button
+                        className="btn-seat-table"
+                        onClick={() => onOpenTableModal(table)}
+                        id={`btn-seat-${table.id}`}
+                      >
+                        <PlusCircle size={15} />
+                        <span>Seat & Open</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-reserve-quick"
+                        onClick={() => reserveTable(table.id)}
+                        id={`btn-reserve-${table.id}`}
+                        title="Mark table as reserved"
+                      >
+                        <Bookmark size={14} />
+                        <span>Reserve</span>
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -207,12 +222,24 @@ export const TableView: React.FC<TableViewProps> = ({
                 {table.status === 'RESERVED' && (
                   <div className="reserved-state">
                     <span className="reserved-label">Reserved for VIP Party</span>
-                    <button
-                      className="btn-seat-table secondary"
-                      onClick={() => onOpenTableModal(table)}
-                    >
-                      <span>Check-In Guest</span>
-                    </button>
+                    <div className="reserved-btn-group">
+                      <button
+                        className="btn-seat-table secondary"
+                        onClick={() => onOpenTableModal(table)}
+                        id={`btn-checkin-${table.id}`}
+                      >
+                        <span>Check-In Guest</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-release-reservation"
+                        onClick={() => cancelReservation(table.id)}
+                        id={`btn-release-${table.id}`}
+                        title="Cancel reservation and make table available"
+                      >
+                        <span>Release</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

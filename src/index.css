@@ -528,6 +528,60 @@ input, select, textarea {
   color: #000;
 }
 
+.available-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-reserve-quick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-reserve-quick:hover {
+  background: var(--color-reserved);
+  color: #fff;
+  border-color: var(--color-reserved);
+}
+
+.reserved-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-release-reservation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-release-reservation:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
 .occupied-state {
   display: flex;
   flex-direction: column;
@@ -1056,6 +1110,13 @@ input, select, textarea {
   font-size: 0.78rem;
 }
 
+.table-inline-picker-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
 .table-inline-picker {
   display: flex;
   align-items: center;
@@ -1079,10 +1140,42 @@ input, select, textarea {
   font-size: 0.78rem;
   font-weight: 700;
   outline: none;
+  transition: all 0.15s ease;
 }
 
 .table-select-dropdown:focus {
   border-color: var(--brand-primary);
+}
+
+.table-select-dropdown.select-error {
+  border-color: #ef4444 !important;
+  color: #fca5a5 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.table-select-dropdown option:disabled {
+  color: #64748b;
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.table-blocked-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  animation: fadeInAlert 0.2s ease-out;
+}
+
+@keyframes fadeInAlert {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .takeaway-inline-info {

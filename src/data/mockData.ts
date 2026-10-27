@@ -259,7 +259,7 @@ export const INITIAL_TABLES: RestaurantTable[] = [
   { id: 'tbl-8', number: 'BAR-1', name: 'Bar High-Top 1', section: 'Bar Counter', capacity: 2, status: 'AVAILABLE' },
   { id: 'tbl-9', number: 'BAR-2', name: 'Bar Counter 2', section: 'Bar Counter', capacity: 2, status: 'AVAILABLE' },
   { id: 'tbl-10', number: 'BAR-3', name: 'Bar Counter 3', section: 'Bar Counter', capacity: 2, status: 'AVAILABLE' },
-  { id: 'tbl-11', number: 'VIP-1', name: 'Wine Cellar Room', section: 'VIP Lounge', capacity: 8, status: 'AVAILABLE' },
+  { id: 'tbl-11', number: 'VIP-1', name: 'Wine Cellar Room', section: 'VIP Lounge', capacity: 8, status: 'RESERVED' },
   { id: 'tbl-12', number: 'VIP-2', name: 'Executive Suite', section: 'VIP Lounge', capacity: 10, status: 'AVAILABLE' }
 ];
 

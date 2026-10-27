@@ -80,6 +80,8 @@ interface POSContextType {
   updateOrderItemStatus: (orderId: string, itemId: string, status: KitchenStatus) => void;
   markOrderCooking: (orderId: string) => void;
   bumpOrderKitchen: (orderId: string) => void;
+  reserveTable: (tableId: string) => boolean;
+  cancelReservation: (tableId: string) => boolean;
   closeActiveOrderDrawer: () => void;
   closeShiftSession: (countedCash: number) => void;
   resetAllData: () => void;
@@ -431,6 +433,25 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const sendDraftsToKitchen = (): OrderItem[] => {
     if (!activeOrder) return [];
 
+    // Guard: Placing order on an already reserved table or a table occupied by another order is not allowed!
+    if (activeOrder.type === 'DINE_IN' && activeOrder.tableId) {
+      const targetTbl = tables.find((t) => t.id === activeOrder.tableId);
+      if (targetTbl) {
+        if (targetTbl.status === 'RESERVED') {
+          console.warn(`Placing order on reserved table ${targetTbl.number} is not allowed.`);
+          return [];
+        }
+        if (
+          (targetTbl.status === 'OCCUPIED' || targetTbl.status === 'BILL_PRINTED') &&
+          targetTbl.activeOrderId &&
+          targetTbl.activeOrderId !== activeOrder.id
+        ) {
+          console.warn(`Placing order on already occupied table ${targetTbl.number} is not allowed.`);
+          return [];
+        }
+      }
+    }
+
     const drafts = activeOrder.items.filter((i) => i.kitchenStatus === 'DRAFT');
     if (drafts.length === 0) return [];
 
@@ -506,6 +527,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ): { order: Order; payment: PaymentRecord } => {
     const targetOrder = orders.find((o) => o.id === orderId) || (activeOrder?.id === orderId ? activeOrder : null);
     if (!targetOrder) throw new Error('Order not found');
+
+    // Guard: Prevent settling/placing order on a reserved table or table occupied by another order
+    if (targetOrder.type === 'DINE_IN' && targetOrder.tableId) {
+      const targetTbl = tables.find((t) => t.id === targetOrder.tableId);
+      if (targetTbl) {
+        if (targetTbl.status === 'RESERVED') {
+          throw new Error(`Placing order on reserved table ${targetTbl.number} is not allowed.`);
+        }
+        if (
+          (targetTbl.status === 'OCCUPIED' || targetTbl.status === 'BILL_PRINTED') &&
+          targetTbl.activeOrderId &&
+          targetTbl.activeOrderId !== targetOrder.id
+        ) {
+          throw new Error(`Placing order on already occupied table ${targetTbl.number} is not allowed.`);
+        }
+      }
+    }
 
     const payment: PaymentRecord = {
       id: `pay-${Date.now()}`,
@@ -823,6 +861,24 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const reserveTable = (tableId: string): boolean => {
+    const targetTable = tables.find((t) => t.id === tableId);
+    if (!targetTable || targetTable.status !== 'AVAILABLE') return false;
+    setTables((prev) =>
+      prev.map((t) => (t.id === tableId ? { ...t, status: 'RESERVED' as const } : t))
+    );
+    return true;
+  };
+
+  const cancelReservation = (tableId: string): boolean => {
+    const targetTable = tables.find((t) => t.id === tableId);
+    if (!targetTable || targetTable.status !== 'RESERVED') return false;
+    setTables((prev) =>
+      prev.map((t) => (t.id === tableId ? { ...t, status: 'AVAILABLE' as const } : t))
+    );
+    return true;
+  };
+
   const closeActiveOrderDrawer = () => {
     setActiveOrder(null);
   };
@@ -891,6 +947,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateOrderItemStatus,
         markOrderCooking,
         bumpOrderKitchen,
+        reserveTable,
+        cancelReservation,
         closeActiveOrderDrawer,
         closeShiftSession,
         resetAllData

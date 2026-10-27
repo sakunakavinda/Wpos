@@ -14,7 +14,8 @@ import {
   UtensilsCrossed,
   Tag,
   Lock,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import type { OrderItem, OrderType } from '../types/pos';
 
@@ -77,7 +78,25 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
   // An existing unpaid order that has newly added draft items waiting to be sent/updated
   const isExistingUnpaidOrderWithDrafts = isExistingOrder && !isPaid && hasDraftItems;
 
+  // Selected table availability validation
+  const selectedTable = activeOrder?.tableId
+    ? tables.find((t) => t.id === activeOrder.tableId)
+    : null;
+
+  const isTableReserved = selectedTable?.status === 'RESERVED';
+  const isTableOccupiedByOther = Boolean(
+    selectedTable &&
+      (selectedTable.status === 'OCCUPIED' || selectedTable.status === 'BILL_PRINTED') &&
+      selectedTable.activeOrderId &&
+      selectedTable.activeOrderId !== activeOrder?.id
+  );
+
+  const isTableUnavailableToOrder = Boolean(
+    activeOrder?.type === 'DINE_IN' && (!selectedTable || isTableReserved || isTableOccupiedByOther)
+  );
+
   const handleHoldAndPayLater = () => {
+    if (isTableUnavailableToOrder) return;
     const newlySent = parkActiveOrder();
     if (newlySent.length > 0) {
       onKOTModal(newlySent);
@@ -85,7 +104,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
   };
 
   const handleUpdateOrderAndKOT = () => {
-    if (!activeOrder) return;
+    if (!activeOrder || isTableUnavailableToOrder) return;
     const newlySent = sendDraftsToKitchen();
     if (newlySent.length > 0) {
       onKOTModal(newlySent);
@@ -93,7 +112,7 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
   };
 
   const handlePayNow = () => {
-    if (!activeOrder) return;
+    if (!activeOrder || isTableUnavailableToOrder) return;
     onPaymentModal(activeOrder.id);
   };
 
@@ -110,9 +129,13 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
 
   const handleTypeChange = (newType: OrderType) => {
     if (newType === 'DINE_IN') {
-      // Find first available table or default
-      const firstAvail = tables.find((t) => t.status === 'AVAILABLE') || tables[0];
-      setOrderType('DINE_IN', firstAvail.id, `${firstAvail.name} (${firstAvail.number})`);
+      // Find first AVAILABLE table ONLY! Never select a reserved or occupied table by default
+      const firstAvail = tables.find((t) => t.status === 'AVAILABLE');
+      if (firstAvail) {
+        setOrderType('DINE_IN', firstAvail.id, `${firstAvail.name} (${firstAvail.number})`);
+      } else {
+        setOrderType('DINE_IN', undefined, undefined);
+      }
     } else {
       setOrderType('TAKEAWAY');
     }
@@ -168,24 +191,52 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
           ) : (
             <div className="order-subtitle-row">
               {activeOrder?.type === 'DINE_IN' ? (
-                <div className="table-inline-picker">
-                  <span className="picker-label">Table:</span>
-                  <select
-                    value={activeOrder.tableId || ''}
-                    onChange={(e) => {
-                      const tbl = tables.find((t) => t.id === e.target.value);
-                      if (tbl) {
-                        setOrderType('DINE_IN', tbl.id, `${tbl.name} (${tbl.number})`);
-                      }
-                    }}
-                    className="table-select-dropdown"
-                  >
-                    {tables.map((tbl) => (
-                      <option key={tbl.id} value={tbl.id}>
-                        {tbl.number} - {tbl.name} ({tbl.capacity}p) {tbl.status !== 'AVAILABLE' && tbl.id !== activeOrder.tableId ? '• Busy' : ''}
-                      </option>
-                    ))}
-                  </select>
+                <div className="table-inline-picker-wrap">
+                  <div className="table-inline-picker">
+                    <span className="picker-label">Table:</span>
+                    <select
+                      value={activeOrder.tableId || ''}
+                      onChange={(e) => {
+                        const tbl = tables.find((t) => t.id === e.target.value);
+                        if (tbl) {
+                          setOrderType('DINE_IN', tbl.id, `${tbl.name} (${tbl.number})`);
+                        }
+                      }}
+                      className={`table-select-dropdown ${isTableUnavailableToOrder ? 'select-error' : ''}`}
+                    >
+                      {!activeOrder.tableId && (
+                        <option value="">-- Select an Available Table --</option>
+                      )}
+                      {tables.map((tbl) => {
+                        const isCurrentOrderTable = tbl.id === activeOrder.tableId && tbl.activeOrderId === activeOrder.id;
+                        const isBlocked = tbl.status !== 'AVAILABLE' && !isCurrentOrderTable;
+                        return (
+                          <option key={tbl.id} value={tbl.id} disabled={isBlocked}>
+                            {tbl.number} - {tbl.name} ({tbl.capacity}p) {
+                              tbl.status === 'RESERVED'
+                                ? '• 🚫 Reserved'
+                                : tbl.status === 'OCCUPIED'
+                                ? (isCurrentOrderTable ? '• Current Tab' : '• 🚫 Occupied')
+                                : tbl.status === 'BILL_PRINTED'
+                                ? (isCurrentOrderTable ? '• Current Tab' : '• 🚫 Bill Printed')
+                                : '• Available'
+                            }
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  {isTableUnavailableToOrder && (
+                    <div className="table-blocked-warning" role="alert">
+                      <AlertTriangle size={14} />
+                      <span>
+                        {isTableReserved
+                          ? `Table ${selectedTable?.number} is already reserved. Placing an order on a reserved table is not allowed.`
+                          : `Table ${selectedTable?.number} is currently occupied by another active order.`}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="takeaway-inline-info">
@@ -382,21 +433,28 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
             {/* 1. Send / Pay Later OR Update button */}
             {isExistingUnpaidOrderWithDrafts ? (
               <button
-                className="footer-btn update-btn"
+                className={`footer-btn update-btn ${isTableUnavailableToOrder ? 'btn-faded-disabled' : ''}`}
                 onClick={handleUpdateOrderAndKOT}
+                disabled={isTableUnavailableToOrder}
                 id="btn-update-order-kot"
-                title="Send new items to kitchen & update KOT"
+                title={
+                  isTableUnavailableToOrder
+                    ? `Cannot update order: Table ${selectedTable?.number} is already ${isTableReserved ? 'reserved' : 'occupied'}`
+                    : 'Send new items to kitchen & update KOT'
+                }
               >
                 <RotateCcw size={17} />
                 <span>Update</span>
               </button>
             ) : !isExistingOrder ? (
               <button
-                className="footer-btn hold-pickup-btn"
+                className={`footer-btn hold-pickup-btn ${isTableUnavailableToOrder ? 'btn-faded-disabled' : ''}`}
                 onClick={handleHoldAndPayLater}
-                disabled={items.length === 0}
+                disabled={items.length === 0 || isTableUnavailableToOrder}
                 title={
-                  activeOrder?.type === 'DINE_IN'
+                  isTableUnavailableToOrder
+                    ? `Cannot place order: Table ${selectedTable?.number || 'selected'} is already ${isTableReserved ? 'reserved' : 'occupied'}`
+                    : activeOrder?.type === 'DINE_IN'
                     ? 'Send items to kitchen & keep table open for post-dine payment'
                     : 'Send items to kitchen & park in pickup queue for payment upon collection'
                 }
@@ -407,13 +465,17 @@ export const OrderDrawer: React.FC<OrderDrawerProps> = ({
               </button>
             ) : null}
 
-            {/* 2. Pay Now button: instant checkout (faded and unclickable until new items are updated) */}
+            {/* 2. Pay Now button: instant checkout */}
             <button
-              className={`footer-btn pay-btn ${isExistingUnpaidOrderWithDrafts ? 'btn-faded-disabled' : ''}`}
+              className={`footer-btn pay-btn ${
+                isExistingUnpaidOrderWithDrafts || isTableUnavailableToOrder ? 'btn-faded-disabled' : ''
+              }`}
               onClick={handlePayNow}
-              disabled={items.length === 0 || isExistingUnpaidOrderWithDrafts}
+              disabled={items.length === 0 || isExistingUnpaidOrderWithDrafts || isTableUnavailableToOrder}
               title={
-                isExistingUnpaidOrderWithDrafts
+                isTableUnavailableToOrder
+                  ? `Cannot place order: Table ${selectedTable?.number || 'selected'} is already ${isTableReserved ? 'reserved' : 'occupied'}`
+                  : isExistingUnpaidOrderWithDrafts
                   ? 'Please click Update to send new items to kitchen before proceeding to payment'
                   : `Pay Now ($${grandTotal.toFixed(2)})`
               }
